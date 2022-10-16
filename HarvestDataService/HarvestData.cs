@@ -22,14 +22,12 @@ namespace HarvestDataService
     public class HarvestData
     {
 
-        private readonly IArmService _iArmService;
         private IArmRepository _iArmRepo;
         private readonly ILogger _logger;
         private string UploadLogFile = "";
 
         public HarvestData()
         {
-            _iArmService = new ArmService();
             _iArmRepo = new ArmRepository();
             _logger = Logger.GetInstance;
             UploadLogFile = _iArmRepo.GetFileLocation(0);
