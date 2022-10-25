@@ -15,5 +15,10 @@ namespace HarvestDataService
         {
             InitializeComponent();
         }
+
+        private void CVUploadProcess_AfterInstall(object sender, InstallEventArgs e)
+        {
+
+        }
     }
 }

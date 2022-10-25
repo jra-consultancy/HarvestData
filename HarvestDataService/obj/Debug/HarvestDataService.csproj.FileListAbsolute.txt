@@ -66,10 +66,6 @@ E:\work\Harvest Data\CVUpload\HarvestDataService\obj\Debug\HarvestDataService.cs
 E:\work\Harvest Data\CVUpload\HarvestDataService\obj\Debug\HarvestDataService.csproj.CopyComplete
 E:\work\Harvest Data\CVUpload\HarvestDataService\obj\Debug\HarvestDataService.exe
 E:\work\Harvest Data\CVUpload\HarvestDataService\obj\Debug\HarvestDataService.pdb
-E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.HarvestDataService.resources
-E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.ProjectInstaller.resources
-E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.GenerateResource.cache
-E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.CoreCompileInputs.cache
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.exe.config
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.exe
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.pdb
@@ -96,7 +92,10 @@ E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\System.Me
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\System.Numerics.Vectors.xml
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Debug\System.Threading.Tasks.Extensions.xml
-E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csprojAssemblyReference.cache
+E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.HarvestDataService.resources
+E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.ProjectInstaller.resources
+E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.GenerateResource.cache
+E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.CoreCompileInputs.cache
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.CopyComplete
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.exe
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.pdb

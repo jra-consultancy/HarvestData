@@ -28,30 +28,31 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.CVUploadProcess = new System.ServiceProcess.ServiceProcessInstaller();
-            this.CVUpload = new System.ServiceProcess.ServiceInstaller();
+            this.HarvestProcess = new System.ServiceProcess.ServiceProcessInstaller();
+            this.HarvestData = new System.ServiceProcess.ServiceInstaller();
             // 
-            // CVUploadProcess
+            // HarvestProcess
             // 
-            this.CVUploadProcess.Account = System.ServiceProcess.ServiceAccount.LocalService;
-            this.CVUploadProcess.Password = null;
-            this.CVUploadProcess.Username = null;
+            this.HarvestProcess.Account = System.ServiceProcess.ServiceAccount.LocalService;
+            this.HarvestProcess.Password = null;
+            this.HarvestProcess.Username = null;
+            this.HarvestProcess.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.CVUploadProcess_AfterInstall);
             // 
-            // CVUpload
+            // HarvestData
             // 
-            this.CVUpload.ServiceName = "CV Upload Service";
+            this.HarvestData.ServiceName = "Harvest Data Service";
             // 
             // ProjectInstaller
             // 
             this.Installers.AddRange(new System.Configuration.Install.Installer[] {
-            this.CVUploadProcess,
-            this.CVUpload});
+            this.HarvestProcess,
+            this.HarvestData});
 
         }
 
         #endregion
 
-        private System.ServiceProcess.ServiceProcessInstaller CVUploadProcess;
-        private System.ServiceProcess.ServiceInstaller CVUpload;
+        private System.ServiceProcess.ServiceProcessInstaller HarvestProcess;
+        private System.ServiceProcess.ServiceInstaller HarvestData;
     }
 }
