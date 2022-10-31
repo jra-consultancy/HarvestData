@@ -12,8 +12,8 @@ namespace HarvestDataService
     {
         
         string GetFileLocation(int Key);
-        DataTable GetAssetData();
+        DataTable GetAssetData(string type);
         void InsertBulkAssetData(DataTable pingResult);
-        void UpdateAssetStatus();
+        void UpdateAssetStatus(string type);
     }
 }
