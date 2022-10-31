@@ -165,6 +165,7 @@ namespace HarvestDataService
 
                         allMachinePingData.Rows.Add(GetHDSize(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
 
+                        /*Add free space for HD*/
 
                         //allMachinePingData.Rows.Add(data);
                     }
