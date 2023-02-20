@@ -17,6 +17,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Management;
+using ADODB;
+using System.DirectoryServices;
 
 namespace HarvestDataService
 {
@@ -59,8 +61,9 @@ namespace HarvestDataService
         {
             try
             {
-                ExecutePing(type = "Ping");
-                ExecuteWmiData(type = "WMI");
+                //ExecutePing(type = "Ping");
+                //ExecuteWmiData(type = "WMI");
+                ExecuteADData();
             }
             catch (Exception ex)
             {
@@ -70,13 +73,105 @@ namespace HarvestDataService
 
         }
 
+        private void ExecuteADData()
+        {
+            Connection objConnection = new Connection();
+            Command objCmd = new Command();
+            Recordset objRecordSet = new Recordset();
+            string outFile = "";
+            bool Appending = false;
+
+            //if (args.Length > 1)
+            //{
+            //    outFile = args[1] + ".txt";
+            //}
+            //else
+            //{
+            //    outFile = args[0] + ".txt";
+            //}
+
+            //if (File.Exists(outFile))
+            //{
+            //    Appending = true;
+            //}
+
+            using (StreamWriter objFile = new StreamWriter(outFile, Appending))
+            {
+                DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
+                string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                string strTarget = "LDAP://" + strDNSDomain;
+                Console.WriteLine("Starting search from " + strTarget);
+
+                objConnection.Provider = "ADsDSOObject";
+                objConnection.Open();
+                objCmd.ActiveConnection = objConnection;
+                objCmd.Properties["Page Size"].Value = 100;
+                objCmd.Properties["Timeout"].Value = 30;
+                objCmd.Properties["Searchscope"].Value = SearchScope.Subtree;
+                objCmd.Properties["Cache Results"].Value = false;
+                objCmd.CommandText = "SELECT c, userAccountControl, CN, givenName, SN, mail, whenCreated, department, displayname FROM '" + strTarget + "' WHERE objectClass = 'user' and objectCategory = 'person' and Name <> 'ExcelExcellence''";
+
+                objRecordSet = objCmd.Execute(out object _, int.MaxValue, (int)CommandTypeEnum.adCmdText);
+                if (Appending)
+                {
+                    Console.WriteLine("Appending output file " + outFile + ". Please wait....");
+                }
+                else
+                {
+                    Console.WriteLine("Creating output file " + outFile + ". Please wait....");
+                    objFile.WriteLine("UserID\tEmail\tFirstName\tLastName\tCountryCode\tCountry\tDepartment\tCreatedOn\tManager\tuserAccountControl\tphysicalDeliveryOfficeName\ttitle\tDisplayName\ttelephone");
+                }
+
+                objRecordSet.MoveFirst();
+                while (!objRecordSet.EOF)
+                {
+                    string SC = objRecordSet.Fields["c"].Value.ToString();
+                    string SCN = objRecordSet.Fields["CN"].Value.ToString();
+                    string SFN = objRecordSet.Fields["givenName"].Value.ToString();
+                    string SSN = objRecordSet.Fields["SN"].Value.ToString();
+                    string SMAIL = objRecordSet.Fields["mail"].Value.ToString();
+                    string SWC = objRecordSet.Fields["WhenCreated"].Value.ToString();
+                    string OFFICE = objRecordSet.Fields["physicalDeliveryOfficeName"].Value.ToString();
+                    string DEPT = objRecordSet.Fields["department"].Value.ToString();
+                    string CO = objRecordSet.Fields["co"].Value.ToString();
+                    string userAccountControl = objRecordSet.Fields["userAccountControl"].Value.ToString();
+                    string JobTitle = objRecordSet.Fields["title"].Value.ToString();
+                    string accExp = objRecordSet.Fields["accountExpires"].Value.ToString();
+                    string lastLogon = objRecordSet.Fields["lastLogon"].Value.ToString();
+                    string Tel = objRecordSet.Fields["telephoneNumber"].Value.ToString();
+                    string DisplayName = objRecordSet.Fields["DisplayName"].Value.ToString();
+                    string PO = objRecordSet.Fields["postalCode"].Value.ToString();
+                    string ManagerUserID = objRecordSet.Fields["manager"].Value.ToString();
+
+
+
+                    objFile.Write("" + SCN);
+                    objFile.Write("\t" + SMAIL);
+                    objFile.Write("\t" + SFN);
+                    objFile.Write("\t" + SSN);
+                    objFile.Write("" + SC);
+                    objFile.Write("\t" + CO);
+                    objFile.Write("\t" + DEPT);
+                    objFile.Write("\t" + SWC);
+                    objFile.Write("" + ManagerUserID);
+                    objFile.Write("\t" + userAccountControl);
+                    objFile.Write("\t" + OFFICE);
+                    objFile.Write("\t" + JobTitle);
+                    objFile.Write("" + DisplayName);
+                    objFile.WriteLine("\t" + Tel);
+
+                    objRecordSet.MoveNext();
+                }
+            }
+        }
+
         private void ExecutePing(string type)
         {
             DataTable pingResult = new DataTable();
 
             DataTable dt = _iArmRepo.GetAssetData(type);
 
-            if (dt != null)
+            if (dt.Rows.Count > 0)
             {
                 pingResult = GetAllMachinePingData(dt);
                 _iArmRepo.InsertBulkAssetData(pingResult);
@@ -151,24 +246,21 @@ namespace HarvestDataService
 
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
-                    for (int j = 0; j < 5; j++)
-                    {
                         DataRow data = allMachinePingData.NewRow();
 
-                        allMachinePingData.Rows.Add(GetSerialNumber(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
+                        allMachinePingData.Rows.Add(GetSerialNumber(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
+                        
+                        allMachinePingData.Rows.Add(GetBiosVersion(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
-                        allMachinePingData.Rows.Add(GetBiosVersion(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
+                        allMachinePingData.Rows.Add(GetChessisType(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
-                        allMachinePingData.Rows.Add(GetChessisType(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
+                        allMachinePingData.Rows.Add(GetMemorycapacity(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
-                        allMachinePingData.Rows.Add(GetMemorycapacity(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
-
-                        allMachinePingData.Rows.Add(GetHDSize(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), data));
+                        allMachinePingData.Rows.Add(GetHDSize(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
                         /*Add free space for HD*/
 
                         //allMachinePingData.Rows.Add(data);
-                    }
 
                 }
                 return allMachinePingData;
@@ -204,7 +296,7 @@ namespace HarvestDataService
             ConnectionOptions options = new ConnectionOptions();
             ManagementScope scope = new ManagementScope(connectingMachineName, options);
             scope.Connect();
-            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_PhysicalMemory");
+            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_DiskDrive");
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
 
             foreach (var disk in searcher.Get())
@@ -213,7 +305,7 @@ namespace HarvestDataService
             }
 
             data["HarvestID"] = harvestID;
-            data["HarvestCollectionType"] = "WMI";
+            data["HarvestCollectionType"] = "HDS";
             data["HarvestValue"] = hdSize;
             data["HarvestDate"] = DateTime.Now;
             return data;
@@ -235,7 +327,7 @@ namespace HarvestDataService
             }
 
             data["HarvestID"] = harvestID;
-            data["HarvestCollectionType"] = "WMI";
+            data["HarvestCollectionType"] = "MC";
             data["HarvestValue"] = memoryCapacity;
             data["HarvestDate"] = DateTime.Now;
             return data;
@@ -261,7 +353,7 @@ namespace HarvestDataService
             }
 
             data["HarvestID"] = harvestID;
-            data["HarvestCollectionType"] = "WMI";
+            data["HarvestCollectionType"] = "CT";
             data["HarvestValue"] = chassisType;
             data["HarvestDate"] = DateTime.Now;
             return data;
@@ -283,7 +375,7 @@ namespace HarvestDataService
             }
 
             data["HarvestID"] = harvestID;
-            data["HarvestCollectionType"] = "WMI";
+            data["HarvestCollectionType"] = "BV";
             data["HarvestValue"] = biosNameVersion;
             data["HarvestDate"] = DateTime.Now;
             return data;
@@ -305,7 +397,7 @@ namespace HarvestDataService
             }
 
             data["HarvestID"] = harvestID;
-            data["HarvestCollectionType"] = "WMI";
+            data["HarvestCollectionType"] = "SN";
             data["HarvestValue"] = serialNumber;
             data["HarvestDate"] = DateTime.Now;
             return data;
