@@ -140,8 +140,6 @@ namespace HarvestDataService
         {
             try
             {
-
-
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 string strTarget = "LDAP://" + strDNSDomain;
