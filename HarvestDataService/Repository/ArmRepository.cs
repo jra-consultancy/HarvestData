@@ -205,5 +205,67 @@ namespace HarvestDataService
                 }
             }
         }
+
+        public void InsertBulkAssetsADData(List<Asset> assets)
+        {
+            try
+            {
+                string query = "SP_Bulk_Insert_Update_Assets";
+
+                using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Assets", assets);
+                    _connectionDB.con.Open();
+                    cmd.ExecuteNonQuery();
+                    _connectionDB.con.Close();
+                }
+                _logger.Log("InsertBulkAssetsADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("InsertBulkAssetsADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //throw ex;
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
+
+        public void InsertBulkUsersADData(List<User> users)
+        {
+            try
+            {
+                string query = "SP_Bulk_Insert_Update_Users";
+
+                using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Users", users);
+                    _connectionDB.con.Open();
+                    cmd.ExecuteNonQuery();
+                    _connectionDB.con.Close();
+                }
+                _logger.Log("InsertBulkUsersADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("InsertBulkUsersADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //throw ex;
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
     }
 }

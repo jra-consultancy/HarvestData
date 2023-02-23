@@ -15,5 +15,10 @@ namespace HarvestDataService
         DataTable GetAssetData(string type);
         void InsertBulkAssetData(DataTable pingResult);
         void UpdateAssetStatus(string type);
+
+        void InsertBulkAssetsADData(List<Asset> assets);
+        void InsertBulkUsersADData(List<User> users);
+
+
     }
 }

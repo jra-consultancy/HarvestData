@@ -75,14 +75,26 @@ namespace HarvestDataService
 
         private void ExecuteADData()
         {
-            GetUserADData();
-            GetComputerADData();
+            List<User> users = GetUserADData();
+            if (users.Count() > 0)
+            {
+                _iArmRepo.InsertBulkUsersADData(users);
+
+            }
+
+            List<Asset> assets = GetComputerADData();
+            if(assets.Count() > 0)
+            {
+                _iArmRepo.InsertBulkAssetsADData(assets);
+
+            }
         }
 
-        private void GetComputerADData()
+        private List<Asset> GetComputerADData()
         {
             try
             {
+                List<Asset> assets = new List<Asset>();
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 string strTarget = "LDAP://" + strDNSDomain;
@@ -104,29 +116,33 @@ namespace HarvestDataService
 
                 foreach (SearchResult result in results)
                 {
+                    Asset asset = new Asset();
+                    asset.AssetID = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
                     // Get the specified properties for the computer object
-                    string cn = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
-                    DateTime created = result.Properties["whenCreated"].Count > 0 ? (DateTime)result.Properties["whenCreated"][0] : DateTime.MinValue;
-                    string description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
-                    string displayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
-                    string dnsHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
-                    bool enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
-                    string eucDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
-                    string ipv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
-                    string ipv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
-                    bool isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
-                    DateTime lastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : DateTime.MinValue;
-                    string location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
-                    bool lockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
-                    int logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
-                    string managedBy = result.Properties["managedBy"].Count > 0 ? result.Properties["managedBy"][0].ToString() : "";
-                    string name = result.Properties["name"].Count > 0 ? result.Properties["name"][0].ToString() : "";
-                    string operatingSystem = result.Properties["operatingSystem"].Count > 0 ? result.Properties["operatingSystem"][0].ToString() : "";
-                    string operatingSystemVersion = result.Properties["operatingSystemVersion"].Count > 0 ? result.Properties["operatingSystemVersion"][0].ToString() : "";
+                    //string cn = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
+                    //DateTime created = result.Properties["whenCreated"].Count > 0 ? (DateTime)result.Properties["whenCreated"][0] : DateTime.MinValue;
+                    //string description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
+                    //string displayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
+                    //string dnsHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
+                    //bool enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
+                    //string eucDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
+                    //string ipv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
+                    //string ipv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
+                    //bool isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
+                    //DateTime lastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : DateTime.MinValue;
+                    //string location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
+                    //bool lockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
+                    //int logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
+                    //string managedBy = result.Properties["managedBy"].Count > 0 ? result.Properties["managedBy"][0].ToString() : "";
+                    //string name = result.Properties["name"].Count > 0 ? result.Properties["name"][0].ToString() : "";
+                    //string operatingSystem = result.Properties["operatingSystem"].Count > 0 ? result.Properties["operatingSystem"][0].ToString() : "";
+                    //string operatingSystemVersion = result.Properties["operatingSystemVersion"].Count > 0 ? result.Properties["operatingSystemVersion"][0].ToString() : "";
+                    assets.Add(asset);
                 }
                 results.Dispose();
                 searcher.Dispose();
                 entry.Dispose();
+                return assets;
             }
             catch(Exception ex)
             {
@@ -136,10 +152,11 @@ namespace HarvestDataService
            
         }
 
-        private void GetUserADData()
+        private List<User> GetUserADData()
         {
             try
             {
+                List<User> users = new List<User>();
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 string strTarget = "LDAP://" + strDNSDomain;
@@ -155,6 +172,7 @@ namespace HarvestDataService
 
                 foreach (SearchResult result in results)
                 {
+                    User user = new User();
                     string givenName = result.Properties["givenName"].Count > 0 ? result.Properties["givenName"][0].ToString() : "";
                     string firstName = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
                     string sn = result.Properties["sn"].Count > 0 ? result.Properties["sn"][0].ToString() : "";
@@ -166,11 +184,15 @@ namespace HarvestDataService
                     string lastname = result.Properties["lastname"].Count > 0 ? result.Properties["lastname"][0].ToString() : "";
                     string surname = result.Properties["surname"].Count > 0 ? result.Properties["surname"][0].ToString() : "";
 
+                    users.Add(user);
+
                 }
 
                 results.Dispose();
                 searcher.Dispose();
                 entry.Dispose();
+
+                return users;
             }
             catch(Exception ex)
             {

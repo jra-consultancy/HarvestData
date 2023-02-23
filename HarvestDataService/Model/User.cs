@@ -8,29 +8,29 @@ namespace HarvestDataService.Model
 {
     public class User
     {
-        public string UserID { get; set; }
-        public string UserName { get; set; }
+        
+        public string UserId { get; set; }
+        public DateTime? AccountExpirationDate { get; set; }
+        public string CO { get; set; }
+        public string Company { get; set; }
+        public DateTime? CreateTimeStamp { get; set; }
         public string Department { get; set; }
-        public string BusinessUnit { get; set; }
-        public string Location { get; set; }
-        public string JobTitle { get; set; }
-        public bool VIP { get; set; } = true;
-        public string Telephone { get; set; }
-        public string Mobile { get; set; }
-        public string Email { get; set; }
-        public bool Live { get; set; } = true;
-        public DateTime? Heartbeat { get; set; }
-        public string Notes { get; set; }
-        public string Custom01 { get; set; }
-        public string Custom02 { get; set; }
-        public string Custom03 { get; set; }
-        public string Custom04 { get; set; }
-        public string Custom05 { get; set; }
-        public string FirstName { get; set; }
-        public string Domain { get; set; }
-        public string DirectManager { get; set; }
-        public string CountryCode { get; set; }
-        public string Language { get; set; }
-        public long? BitStatus { get; set; }
+        public string Description { get; set; }
+        public string DisplayName { get; set; }
+        public string EmailAddress { get; set; }
+        public string EmployeeID { get; set; }
+        public bool Enabled { get; set; } = false;
+        public string GivenName { get; set; }
+        public DateTime? LastLogonDate { get; set; }
+        public int logonCount { get; set; }
+        public string mailNickname { get; set; }
+        public string manager { get; set; }
+        public bool PasswordExpired { get; set; } = false;
+        public string PhysicalDeliveryOfficeName { get; set; }
+        public string postalCode { get; set; }
+        public string Surname { get; set; }
+        public string TelephoneNumber { get; set; }
+        public string Title { get; set; }
+        public string UserAccountControl { get; set; }
     }
 }

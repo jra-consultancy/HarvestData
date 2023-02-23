@@ -120,9 +120,11 @@
     <Compile Include="HarvestDataService.Designer.cs">
       <DependentUpon>HarvestDataService.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Asset.cs" />
     <Compile Include="Model\A_AssetHarvest.cs" />
     <Compile Include="Model\A_AssetHarvestResults.cs" />
     <Compile Include="Model\Keys.cs" />
+    <Compile Include="Model\User.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
