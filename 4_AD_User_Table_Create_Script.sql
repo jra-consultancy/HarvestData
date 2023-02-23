@@ -1,4 +1,5 @@
 
+
 CREATE TABLE [dbo].[AD_User](
 	[UserId] [nvarchar](50) NOT NULL,
 	[AccountExpirationDate] [datetime] NULL,
@@ -23,6 +24,8 @@ CREATE TABLE [dbo].[AD_User](
 	[TelephoneNumber] [nvarchar](50) NULL,
 	[Title] [nvarchar](255) NULL,
 	[UserAccountControl] [nvarchar](255) NULL,
+	[CreatedDate] [datetime] NULL,
+	[UpdateDate] [datetime] NULL,
  CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC

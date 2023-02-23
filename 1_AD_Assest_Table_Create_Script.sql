@@ -1,12 +1,4 @@
-USE [AmmsOnlineCountry]
-GO
 
-/****** Object:  Table [dbo].[Asset]    Script Date: 2/23/2023 3:42:23 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
 
 CREATE TABLE [dbo].[AD_Assets](
 	[AssetID] [nvarchar](255) NOT NULL,
@@ -28,6 +20,8 @@ CREATE TABLE [dbo].[AD_Assets](
 	[OperatingSystem] [nvarchar](255) NULL,
 	[OperatingSystemVersion] [nvarchar](255) NULL,
 	[PasswordExpired] [nvarchar](50) NULL,
+	[CreatedDate] [datetime] NULL,
+	[UpdatedDate] [datetime] NULL,
  CONSTRAINT [PK_AD_Assets] PRIMARY KEY CLUSTERED 
 (
 	[AssetID] ASC
