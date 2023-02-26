@@ -206,7 +206,7 @@ namespace HarvestDataService
             }
         }
 
-        public void InsertBulkAssetsADData(List<Asset> assets)
+        public void InsertBulkAssetsADData(DataTable assets)
         {
             try
             {
@@ -237,7 +237,7 @@ namespace HarvestDataService
             }
         }
 
-        public void InsertBulkUsersADData(List<User> users)
+        public void InsertBulkUsersADData(DataTable users)
         {
             try
             {
