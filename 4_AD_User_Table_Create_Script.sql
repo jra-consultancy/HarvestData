@@ -1,7 +1,6 @@
 
-
 CREATE TABLE [dbo].[AD_User](
-	[UserId] [nvarchar](50) NOT NULL,
+	[UserId] [nvarchar](255) NOT NULL,
 	[AccountExpirationDate] [datetime] NULL,
 	[CO] [nvarchar](255) NULL,
 	[Company] [nvarchar](255) NULL,
@@ -26,6 +25,9 @@ CREATE TABLE [dbo].[AD_User](
 	[UserAccountControl] [nvarchar](255) NULL,
 	[CreatedDate] [datetime] NULL,
 	[UpdateDate] [datetime] NULL,
+	[SamAccountName] [nvarchar](255) NULL,
+	[StreetAddress] [nvarchar](max) NULL,
+	[CountryCode] [nvarchar](50) NULL,
  CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC

@@ -27,5 +27,24 @@ namespace HarvestDataService.Model
         public string OperatingSystem { get; set; }
         public string OperatingSystemVersion { get; set; }
         public string PasswordExpired { get; set; }
+        public string ObjectGUID { get; set; }
+        public string DistinguishedName { get; set; }
+        public string OperatingSystemServicePack { get; set; }
+        public DateTime? WhenCreated { get; set; }
+        public DateTime? WhenChanged { get; set; }
+        public string ServicePrincipalName { get; set; }
+        public string MemberOf { get; set; }
+        public string UserAccountControl { get; set; }
+
+
+
+
+
+
+
+
+
+
+
     }
 }

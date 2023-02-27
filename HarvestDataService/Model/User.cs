@@ -32,5 +32,9 @@ namespace HarvestDataService.Model
         public string TelephoneNumber { get; set; }
         public string Title { get; set; }
         public string UserAccountControl { get; set; }
+        public string sam_account_name { get; set; }
+        public string street_address { get; set; }
+        public string country_Code { get; set; }
+
     }
 }

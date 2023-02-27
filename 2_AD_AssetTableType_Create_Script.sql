@@ -1,6 +1,6 @@
 
 
-/****** Object:  UserDefinedTableType [dbo].[AssetTableType]    Script Date: 2/23/2023 3:44:07 PM ******/
+/****** Object:  UserDefinedTableType [dbo].[AD_AssetTableType]    Script Date: 2/27/2023 5:40:26 PM ******/
 CREATE TYPE [dbo].[AD_AssetTableType] AS TABLE(
 	[AssetID] [nvarchar](255) NOT NULL,
 	[Description] [nvarchar](255) NULL,
@@ -20,7 +20,15 @@ CREATE TYPE [dbo].[AD_AssetTableType] AS TABLE(
 	[Name] [nvarchar](255) NULL,
 	[OperatingSystem] [nvarchar](255) NULL,
 	[OperatingSystemVersion] [nvarchar](255) NULL,
-	[PasswordExpired] [nvarchar](255) NULL
+	[PasswordExpired] [nvarchar](255) NULL,
+	[ObjectGUID] [nvarchar](255) NULL,
+	[DistinguishedName] [nvarchar](255) NULL,
+	[OperatingSystemServicePack] [nvarchar](255) NULL,
+	[WhenCreated] [datetime] NULL,
+	[WhenChanged] [datetime] NULL,
+	[ServicePrincipalName] [nvarchar](255) NULL,
+	[MemberOf] [nvarchar](255) NULL,
+	[UserAccountControl] [nvarchar](255) NULL
 )
 GO
 

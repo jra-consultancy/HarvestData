@@ -22,6 +22,14 @@ CREATE TABLE [dbo].[AD_Assets](
 	[PasswordExpired] [nvarchar](50) NULL,
 	[CreatedDate] [datetime] NULL,
 	[UpdatedDate] [datetime] NULL,
+	[ObjectGUID] [nvarchar](255) NULL,
+	[DistinguishedName] [nvarchar](255) NULL,
+	[OperatingSystemServicePack] [nvarchar](255) NULL,
+	[WhenCreated] [datetime] NULL,
+	[WhenChanged] [datetime] NULL,
+	[ServicePrincipalName] [nvarchar](255) NULL,
+	[MemberOf] [nvarchar](255) NULL,
+	[UserAccountControl] [nvarchar](255) NULL,
  CONSTRAINT [PK_AD_Assets] PRIMARY KEY CLUSTERED 
 (
 	[AssetID] ASC
