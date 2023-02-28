@@ -8,7 +8,7 @@ namespace HarvestDataService.Model
 {
     public class User
     {
-        
+
         public string UserId { get; set; }
         public DateTime? AccountExpirationDate { get; set; }
         public string CO { get; set; }
@@ -32,9 +32,9 @@ namespace HarvestDataService.Model
         public string TelephoneNumber { get; set; }
         public string Title { get; set; }
         public string UserAccountControl { get; set; }
-        public string sam_account_name { get; set; }
-        public string street_address { get; set; }
-        public string country_Code { get; set; }
+        public string SamAccountName { get; set; }
+        public string StreetAddress { get; set; }
+        public string CountryCode { get; set; }
 
     }
 }

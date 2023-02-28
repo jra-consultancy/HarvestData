@@ -20,6 +20,7 @@ using System.Management;
 using ADODB;
 using System.DirectoryServices;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace HarvestDataService
 {
@@ -43,8 +44,9 @@ namespace HarvestDataService
             if (!Monitor.TryEnter(Mylock, 0)) return;
             try
             {
-                ExecutePing(type = "Ping");
-                ExecuteWmiData(type = "WMI");
+                //ExecutePing(type = "Ping");
+                //ExecuteWmiData(type = "WMI");
+                ExecuteADData();
             }
             catch (Exception ex)
             {
@@ -79,14 +81,14 @@ namespace HarvestDataService
             List<User> users = GetUserADData();
             if (users.Count() > 0)
             {
-                _iArmRepo.InsertBulkUsersADData(ToDataTable(users));
+                _iArmRepo.InsertBulkUsersADData(ConvertToDataTable(users));
 
             }
 
             List<Asset> assets = GetComputerADData();
             if(assets.Count() > 0)
             {
-                _iArmRepo.InsertBulkAssetsADData(ToDataTable(assets));
+                _iArmRepo.InsertBulkAssetsADData(ConvertToDataTable(assets));
 
             }
         }
@@ -105,7 +107,7 @@ namespace HarvestDataService
                 string[] propertiesToLoad = new string[] {
                     "cn", "whenCreated", "description", "displayName", "dNSHostName",
                     "userAccountControl", "eucDeviceType", "ipv4Address", "ipv6Address",
-                    "isDeleted", "lastLogon", "location", "lockoutTime",
+                    "isDeleted", "lastLogonTimestamp", "location", "lockoutTime",
                     "logonCount", "managedBy", "name", "operatingSystem",
                     "operatingSystemVersion", "pwdLastSet","objectGUID","distinguishedName",
                     "operatingSystemServicePack","whenChanged","servicePrincipalName","memberOf"
@@ -120,7 +122,7 @@ namespace HarvestDataService
                 {
                     Asset asset = new Asset();
                     asset.AssetID = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
-                    asset.WhenCreated = result.Properties["whenCreated"].Count > 0 ? (DateTime)result.Properties["whenCreated"][0] : DateTime.MinValue;
+                    asset.WhenCreated = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
                     asset.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
                     asset.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
                     asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
@@ -129,7 +131,7 @@ namespace HarvestDataService
                     asset.IPv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
                     asset.IPv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
                     asset.isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
-                    asset.LastLogonDate = result.Properties["lastLogon"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogon"][0]) : DateTime.MinValue;
+                    asset.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
                     asset.Location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
                     asset.LockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
                     asset.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
@@ -141,7 +143,7 @@ namespace HarvestDataService
                     asset.ObjectGUID = result.Properties["objectGUID"].Count > 0 ? result.Properties["objectGUID"][0].ToString() : "";
                     asset.DistinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
                     asset.OperatingSystemServicePack = result.Properties["operatingSystemServicePack"].Count > 0 ? result.Properties["operatingSystemServicePack"][0].ToString() : "";
-                    asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["whenChanged"][0]) : DateTime.MinValue;
+                    asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
                     asset.ServicePrincipalName = result.Properties["servicePrincipalName"].Count > 0 ? result.Properties["servicePrincipalName"][0].ToString() : "";
                     asset.MemberOf = result.Properties["memberOf"].Count > 0 ? result.Properties["memberOf"][0].ToString() : "";
 
@@ -171,8 +173,11 @@ namespace HarvestDataService
                 string strTarget = "LDAP://" + strDNSDomain;
 
                 string domainPath = strTarget;//"LDAP://yourdomain.com"; // Replace with your domain name
-                string searchFilter = "(&(objectCategory=person)(objectClass=user))";
-                string[] propertiesToLoad = new string[] { "userPrincipalName", "accountExpires", "givenName", "company", "uSNCreated",
+                                              //string searchFilter = "(&(objectCategory=person)(objectClass=user))";
+                                              //string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain))";
+
+                string[] propertiesToLoad = new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
                     "department", "description", "displayName", "mail","employeeID","enabled","uSNCreated","logonCount","mailNickname",
                     "manager","PasswordExpired","physicalDeliveryOfficeName","postalCode","sn","telephoneNumber","title","userAccountControl",
                     "sAMAccountName","streetAddress","countryCode"
@@ -186,18 +191,18 @@ namespace HarvestDataService
                 {
                     User user = new User();
                     user.UserId = result.Properties["userPrincipalName"].Count > 0 ? result.Properties["userPrincipalName"][0].ToString() : Convert.ToString(Guid.NewGuid());
-                    user.AccountExpirationDate = result.Properties["accountExpires"].Count > 0 ? (DateTime)result.Properties["accountExpires"][0] : DateTime.MinValue;
+                    user.AccountExpirationDate = result.Properties["AccountExpirationDate"].Count > 0 ? (DateTime?)result.Properties["AccountExpirationDate"][0] : null;
                     user.GivenName = result.Properties["givenName"].Count > 0 ? result.Properties["givenName"][0].ToString() : "";
                     user.CO = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
                     user.Company = result.Properties["company"].Count > 0 ? result.Properties["company"][0].ToString() : "";
-                    user.CreateTimeStamp= result.Properties["uSNCreated"].Count > 0 ? (DateTime)result.Properties["uSNCreated"][0] : DateTime.MinValue;
+                    user.CreateTimeStamp= result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
                     user.Department = result.Properties["department"].Count > 0 ? result.Properties["department"][0].ToString() : "";
                     user.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
                     user.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
                     user.EmailAddress = result.Properties["mail"].Count > 0 ? result.Properties["mail"][0].ToString() : "";
                     user.EmployeeID = result.Properties["employeeID"].Count > 0 ? result.Properties["employeeID"][0].ToString() : "";
                     user.Enabled = result.Properties["enabled"].Count > 0 ? Convert.ToInt64(result.Properties["enabled"][0]) != 0 : false;
-                    user.LastLogonDate = result.Properties["uSNCreated"].Count > 0 ? (DateTime)result.Properties["uSNCreated"][0] : DateTime.MinValue;
+                    user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
                     user.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
                     user.mailNickname = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
                     user.manager = result.Properties["manager"].Count > 0 ? result.Properties["manager"][0].ToString() : "";
@@ -208,9 +213,9 @@ namespace HarvestDataService
                     user.TelephoneNumber = result.Properties["telephoneNumber"].Count > 0 ? result.Properties["telephoneNumber"][0].ToString() : "";
                     user.Title = result.Properties["title"].Count > 0 ? result.Properties["title"][0].ToString() : "";
                     user.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
-                    user.sam_account_name = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
-                    user.street_address = result.Properties["streetAddress"].Count > 0 ? result.Properties["streetAddress"][0].ToString() : "";
-                    user.country_Code = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
+                    user.SamAccountName = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
+                    user.StreetAddress = result.Properties["streetAddress"].Count > 0 ? result.Properties["streetAddress"][0].ToString() : "";
+                    user.CountryCode = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
 
 
                     users.Add(user);
@@ -468,26 +473,29 @@ namespace HarvestDataService
             return data;
         }
 
-        public static DataTable ToDataTable<T>(IList<T> data)
+        public static DataTable ConvertToDataTable<T>(IEnumerable<T> list)
         {
-            PropertyDescriptorCollection props =
-                TypeDescriptor.GetProperties(typeof(T));
-            DataTable table = new DataTable();
-            for (int i = 0; i < props.Count; i++)
+            var dataTable = new DataTable();
+            PropertyInfo[] propertyInfos = typeof(T).GetProperties();
+
+            // create columns in the data table based on the properties of the object
+            foreach (PropertyInfo propertyInfo in propertyInfos)
             {
-                PropertyDescriptor prop = props[i];
-                table.Columns.Add(prop.Name, prop.PropertyType);
+                dataTable.Columns.Add(propertyInfo.Name, Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType);
             }
-            object[] values = new object[props.Count];
-            foreach (T item in data)
+
+            // add rows to the data table
+            foreach (T obj in list)
             {
-                for (int i = 0; i < values.Length; i++)
+                DataRow dataRow = dataTable.NewRow();
+                foreach (PropertyInfo propertyInfo in propertyInfos)
                 {
-                    values[i] = props[i].GetValue(item);
+                    dataRow[propertyInfo.Name] = propertyInfo.GetValue(obj, null) ?? DBNull.Value;
                 }
-                table.Rows.Add(values);
+                dataTable.Rows.Add(dataRow);
             }
-            return table;
+
+            return dataTable;
         }
 
     }

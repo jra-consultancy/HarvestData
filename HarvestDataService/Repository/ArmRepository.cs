@@ -215,7 +215,7 @@ namespace HarvestDataService
                 using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Assets", assets);
+                    cmd.Parameters.AddWithValue("@AssetTableType", assets);
                     _connectionDB.con.Open();
                     cmd.ExecuteNonQuery();
                     _connectionDB.con.Close();
@@ -241,12 +241,12 @@ namespace HarvestDataService
         {
             try
             {
-                string query = "SP_Bulk_Insert_Update_Users";
+                string query = "[dbo].[SP_Bulk_Insert_Update_Users]";
 
                 using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Users", users);
+                    cmd.Parameters.AddWithValue("@UserTableType", users);
                     _connectionDB.con.Open();
                     cmd.ExecuteNonQuery();
                     _connectionDB.con.Close();
