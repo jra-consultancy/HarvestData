@@ -44,9 +44,8 @@ namespace HarvestDataService
             if (!Monitor.TryEnter(Mylock, 0)) return;
             try
             {
-                //ExecutePing(type = "Ping");
-                //ExecuteWmiData(type = "WMI");
-                ExecuteADData();
+                ExecutePing(type = "Ping");
+                ExecuteWmiData(type = "WMI");
             }
             catch (Exception ex)
             {
