@@ -101,6 +101,9 @@ namespace HarvestDataService
                 string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 string strTarget = "LDAP://" + strDNSDomain;
 
+                _logger.Log("Harvest GetComputerADData: Domain Path is " + strTarget, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
+
                 string domainPath = strTarget;
                 string searchFilter = "(&(objectCategory=computer))";
                 string[] propertiesToLoad = new string[] {
@@ -115,6 +118,7 @@ namespace HarvestDataService
                 DirectoryEntry entry = new DirectoryEntry(domainPath);
                 DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter, propertiesToLoad);
                 SearchResultCollection results = searcher.FindAll();
+                _logger.Log("Harvest GetComputerADData: Connection Established ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
 
                 foreach (SearchResult result in results)
@@ -174,6 +178,8 @@ namespace HarvestDataService
                 string domainPath = strTarget;//"LDAP://yourdomain.com"; // Replace with your domain name
                                               //string searchFilter = "(&(objectCategory=person)(objectClass=user))";
                                               //string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+                _logger.Log("Harvest GetUserADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
                 string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain))";
 
                 string[] propertiesToLoad = new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
@@ -185,6 +191,7 @@ namespace HarvestDataService
                 DirectoryEntry entry = new DirectoryEntry(domainPath);
                 DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter, propertiesToLoad);
                 SearchResultCollection results = searcher.FindAll();
+                _logger.Log("Harvest GetUserADData: Connection Established ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
                 foreach (SearchResult result in results)
                 {
@@ -229,7 +236,7 @@ namespace HarvestDataService
             }
             catch(Exception ex)
             {
-                _logger.Log("Harvest GetComputerADData:" + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                _logger.Log("Harvest GetUserADData:" + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                 throw ex;
             }
         }
