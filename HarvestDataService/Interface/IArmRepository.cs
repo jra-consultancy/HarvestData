@@ -19,6 +19,9 @@ namespace HarvestDataService
         void InsertBulkAssetsADData(DataTable assets);
         void InsertBulkUsersADData(DataTable users);
 
+        string GetAD_Domain();
+
+
 
     }
 }

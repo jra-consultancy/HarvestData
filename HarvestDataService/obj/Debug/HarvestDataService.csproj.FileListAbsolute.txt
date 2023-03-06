@@ -134,3 +134,4 @@ E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDa
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.CopyComplete
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.exe
 E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.pdb
+E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csprojAssemblyReference.cache

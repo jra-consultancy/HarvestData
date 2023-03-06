@@ -20,6 +20,7 @@ namespace HarvestDataService
         private ConnectionDb _connectionDB;
         private readonly ILogger _logger;
         private string UploadLogFile = "";
+        private string value = "AD_Domain";
         public ArmRepository()
         {
             _logger = Logger.GetInstance;
@@ -258,6 +259,50 @@ namespace HarvestDataService
             {
                 _logger.Log("InsertBulkUsersADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                 //throw ex;
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
+        public string GetAD_Domain()
+        {
+            string sourceTableQuery = "select [dbo].[fnGlobalProperty](@propertyName) AS PropertyValue";
+
+            string domainPath;
+            try
+            {
+                _connectionDB.con.Open();
+                using (SqlCommand cmd = new SqlCommand(sourceTableQuery, _connectionDB.con))
+                {
+                    cmd.Parameters.AddWithValue("@propertyName", value);
+
+                    //var dr = cmd.ExecuteReader();
+                    domainPath = (string)cmd.ExecuteScalar();
+
+                    //if (dr.Read()) // Read() returns TRUE if there are records to read, or FALSE if there is nothing
+                    //{
+                    //    location = dr["PropertyValue"].ToString();
+
+                    //}
+
+                }
+                _connectionDB.con.Close();
+                return domainPath;
+            }
+            catch (Exception ex)
+            {
+                using (EventLog eventLog = new EventLog("Application"))
+                {
+                    eventLog.Source = "Application";
+                    eventLog.WriteEntry("Harvest Service Error Messege: " + ex.Message, EventLogEntryType.Error, 999, 1);
+                }
+                _logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
+                throw ex;
             }
             finally
             {
