@@ -106,6 +106,7 @@ namespace HarvestDataService
                 string domainName = "";
                 string dc1 = "";
                 string dc2 = "";
+                string domainPath = "";
 
                 string firstDomain = ldapPathComponents[0].Substring(3);
 
@@ -118,6 +119,8 @@ namespace HarvestDataService
                         if (ldapPathComponents.Length > 2)
                         {
                             domainName = firstDomain + "." + dc1;
+                            domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+
                         }
 
                     }
@@ -126,8 +129,9 @@ namespace HarvestDataService
                         dc2 = "";
                         dc2 = ldapPathComponents[i + 1].Substring(3);
                         domainName = dc1 + "." + dc2;
+                        domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+
                     }
-                    string domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
 
                     //string domainPath = "LDAP://" + ldapPathComponents[i];
                     _logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
@@ -222,6 +226,7 @@ namespace HarvestDataService
                 string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 //string strDNSDomain = "DC=manufacture,DC=astellas,DC=net";
                 string domainName = "";
+                string domainPath = "";
                 string dc1 = "";
                 string dc2 = "";
 
@@ -237,6 +242,8 @@ namespace HarvestDataService
                         if (ldapPathComponents.Length > 2)
                         {
                             domainName = firstDomain + "." + dc1;
+                            domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+
                         }
 
                     }
@@ -245,9 +252,10 @@ namespace HarvestDataService
                         dc2 = "";
                         dc2 = ldapPathComponents[i + 1].Substring(3);
                         domainName = dc1 + "." + dc2;
+                        domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+
                     }
 
-                    string domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
 
                     _logger.Log("Harvest GetUserADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
