@@ -61,14 +61,27 @@ namespace HarvestDataService
 
         private void InitializeComponents()
         {
-            HarvestData parser = new HarvestData();
-            parser.Harvest();
-            //var timerInterVal = Convert.ToInt32(_iArmRepo.GetFileLocation(0));// int.Parse(ConfigurationManager.AppSettings["timeInterVal"]);
-            //_timer.AutoReset = true;
-            //_timer.Interval = timerInterVal;
-            //_timer.Enabled = true;
-            //_timer.Start();
-            //_timer.Elapsed += (new FileParser()).FileParse;
+            //HarvestData parser = new HarvestData();
+            //parser.Harvest();
+            DateTime startTime = DateTime.Today.AddHours(9);
+
+            // If the start time has already passed today, schedule for tomorrow
+            if (startTime < DateTime.Now)
+            {
+                startTime = startTime.AddDays(1);
+            }
+
+            // Calculate the time interval until the scheduled time
+            TimeSpan timeUntilStart = startTime - DateTime.Now;
+
+            // Set up the timer to run at the scheduled time every 24 hours
+            _timer.AutoReset = true;
+            _timer.Interval = timeUntilStart.TotalMilliseconds;
+            _timer.Enabled = true;
+            _timer.Start();
+            _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
+
+            //_timer.Elapsed += (new HarvestData()).Harvest;
         }
 
 

@@ -40,7 +40,7 @@
             // 
             // HarvestData
             // 
-            this.HarvestData.ServiceName = "CV Harvester";
+            this.HarvestData.ServiceName = "CV Harvest Data Service";
             // 
             // ProjectInstaller
             // 
