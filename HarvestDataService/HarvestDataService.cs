@@ -63,9 +63,9 @@ namespace HarvestDataService
         {
             //HarvestData parser = new HarvestData();
             //parser.Harvest();
-            DateTime startTime = DateTime.Today.AddHours(9);
+            DateTime startTime = DateTime.Today.AddHours(5);
 
-            // If the start time has already passed today, schedule for tomorrow
+            // If the start time has already passed today, schedule for the next day
             if (startTime < DateTime.Now)
             {
                 startTime = startTime.AddDays(1);
@@ -74,12 +74,20 @@ namespace HarvestDataService
             // Calculate the time interval until the scheduled time
             TimeSpan timeUntilStart = startTime - DateTime.Now;
 
-            // Set up the timer to run at the scheduled time every 24 hours
-            _timer.AutoReset = true;
-            _timer.Interval = timeUntilStart.TotalMilliseconds;
-            _timer.Enabled = true;
-            _timer.Start();
-            _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
+            // If the scheduled time has already passed today, run the task immediately
+            if (timeUntilStart <= TimeSpan.Zero)
+            {
+                (new HarvestData()).Harvest();
+            }
+            else
+            {
+                // Set up the timer to run at the scheduled time every 24 hours
+                _timer.AutoReset = true;
+                _timer.Interval = timeUntilStart.TotalMilliseconds;
+                _timer.Enabled = true;
+                _timer.Start();
+                _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
+            }
 
             //_timer.Elapsed += (new HarvestData()).Harvest;
         }
