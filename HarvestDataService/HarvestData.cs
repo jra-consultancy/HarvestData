@@ -47,7 +47,7 @@ namespace HarvestDataService
             {
                 //ExecutePing(type = "Ping");
                 //ExecuteWmiData(type = "WMI");
-                //ExecuteADData();
+                ExecuteADData();
             }
             catch (Exception ex)
             {
@@ -101,8 +101,12 @@ namespace HarvestDataService
                 List<Asset> assets = new List<Asset>();
 
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
-                string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
-
+                string strDNSDomain = "";
+                strDNSDomain = _iArmRepo.GetAD_Domain();
+                if (String.IsNullOrEmpty(strDNSDomain))
+                {
+                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                }
                 string[] ldapPathComponents = strDNSDomain.Split(',');
                 string domainName = "";
                 string dc1 = "";
@@ -113,6 +117,7 @@ namespace HarvestDataService
 
                 for (int i = 0; i < ldapPathComponents.Length; i++)
                 {
+                    domainPath = null;
                     dc1 = "";
                     dc1 = ldapPathComponents[i].Substring(3);
                     if (i + 1 == ldapPathComponents.Length)
@@ -120,7 +125,7 @@ namespace HarvestDataService
                         if (ldapPathComponents.Length > 2)
                         {
                             domainName = firstDomain + "." + dc1;
-                            domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+                            domainPath = "LDAP://DC=" + firstDomain + ",DC=" + dc2;
                         }
                     }
                     else
@@ -132,6 +137,11 @@ namespace HarvestDataService
                     }
                     //string domainPath = "LDAP://" + ldapPathComponents[i];
                     _logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
+                    if (domainPath == null)
+                    {
+                        break;
+                    }
 
 
                     //string domainPath = strTarget;
@@ -201,8 +211,9 @@ namespace HarvestDataService
                                 count++;
 
                             }
+                            results.Dispose();
                         }
-                        results.Dispose();
+                        
                         searcher.Dispose();
                         entry.Dispose();
                     }
@@ -228,7 +239,13 @@ namespace HarvestDataService
 
                 List<User> users = new List<User>();
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
-                string strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                string strDNSDomain = "";
+                strDNSDomain = _iArmRepo.GetAD_Domain();
+                if (String.IsNullOrEmpty(strDNSDomain))
+                {
+                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                }
+
                 //string strDNSDomain = "DC=manufacture,DC=astellas,DC=net";
                 string domainName = "";
                 string domainPath = "";
@@ -240,6 +257,7 @@ namespace HarvestDataService
 
                 for (int i = 0; i < ldapPathComponents.Length; i++)
                 {
+                    domainPath = null;
                     dc1 = "";
                     dc1 = ldapPathComponents[i].Substring(3);
                     if (i + 1 == ldapPathComponents.Length)
@@ -247,7 +265,7 @@ namespace HarvestDataService
                         if (ldapPathComponents.Length > 2)
                         {
                             domainName = firstDomain + "." + dc1;
-                            domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+                            domainPath = "LDAP://DC=" + firstDomain + ",DC=" + dc2;
 
                         }
 
@@ -260,32 +278,35 @@ namespace HarvestDataService
                         domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
 
                     }
-
+                    if(domainPath == null)
+                    {
+                        break;
+                    }
 
                     _logger.Log("Harvest GetUserADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                     string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain))";
+                    try
+                    {
+                        DirectoryEntry entry = new DirectoryEntry(domainPath);
+                        DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter);
+                        // Count the total number of records in the Active Directory
+                        searcher.PageSize = 1;
+                        searcher.SizeLimit = 0;
+                        searcher.PropertiesToLoad.Clear();
+                        searcher.PropertiesToLoad.Add("cn");
+                        SearchResultCollection results = searcher.FindAll();
+                        int totalRecords = results.Count;
 
-                    DirectoryEntry entry = new DirectoryEntry(domainPath);
-                    DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter);
-                    // Count the total number of records in the Active Directory
-                    searcher.PageSize = 1;
-                    searcher.SizeLimit = 0;
-                    searcher.PropertiesToLoad.Clear();
-                    searcher.PropertiesToLoad.Add("cn");
-                    SearchResultCollection results = searcher.FindAll();
-                    int totalRecords = results.Count;
-
-                    searcher.PropertiesToLoad.Clear();
-                    searcher.PropertiesToLoad.AddRange(new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
+                        searcher.PropertiesToLoad.Clear();
+                        searcher.PropertiesToLoad.AddRange(new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
                     "department", "description", "displayName", "mail","employeeID","enabled","uSNCreated","logonCount","mailNickname",
                     "manager","PasswordExpired","physicalDeliveryOfficeName","postalCode","sn","telephoneNumber","title","userAccountControl",
                     "sAMAccountName","streetAddress","countryCode"
                      });
-                    searcher.PageSize = 6000;
-                    int count = 0;
+                        searcher.PageSize = 6000;
+                        int count = 0;
 
-                    try
-                    {
+
                         while (count < totalRecords)
                         {
                             results = searcher.FindAll();
@@ -330,8 +351,9 @@ namespace HarvestDataService
                                 users.Add(user);
                                 count++;
                             }
+                            results.Dispose();
                         }
-                        results.Dispose();
+                        
                         searcher.Dispose();
                         entry.Dispose();
                     }

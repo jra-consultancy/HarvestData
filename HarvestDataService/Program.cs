@@ -15,15 +15,15 @@ namespace HarvestDataService
         /// </summary>
         static void Main()
         {
-            //var fileParser = new HarvestData();
-            //fileParser.Harvest();
-            //Console.ReadLine();
-            ServiceBase[] ServicesToRun;
-            ServicesToRun = new ServiceBase[]
-            {
-                new HarvestDataService()
-            };
-            ServiceBase.Run(ServicesToRun);
+            var fileParser = new HarvestData();
+            fileParser.Harvest();
+            Console.ReadLine();
+            //ServiceBase[] ServicesToRun;
+            //ServicesToRun = new ServiceBase[]
+            //{
+            //    new HarvestDataService()
+            //};
+            //ServiceBase.Run(ServicesToRun);
         }
     }
 }
