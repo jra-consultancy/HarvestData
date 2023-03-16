@@ -22,6 +22,7 @@ using System.DirectoryServices;
 using System.ComponentModel;
 using System.Reflection;
 using System.Web.Hosting;
+using System.ServiceProcess;
 
 namespace HarvestDataService
 {
@@ -32,6 +33,7 @@ namespace HarvestDataService
         private readonly ILogger _logger;
         private string UploadLogFile = "";
         private string type = "";
+        private string serviceName = "CV Harvest Data Service";
 
         public HarvestData()
         {
@@ -45,6 +47,8 @@ namespace HarvestDataService
             if (!Monitor.TryEnter(Mylock, 0)) return;
             try
             {
+                string version = GetServiceVersion(serviceName);
+                _iArmRepo.InsertVersionNoIfNotFound(version);
                 //ExecutePing(type = "Ping");
                 //ExecuteWmiData(type = "WMI");
                 ExecuteADData();
@@ -65,6 +69,8 @@ namespace HarvestDataService
         {
             try
             {
+                string version = GetServiceVersion(serviceName);
+                _iArmRepo.InsertVersionNoIfNotFound(version);
                 //ExecutePing(type = "Ping");
                 //ExecuteWmiData(type = "WMI");
                 ExecuteADData();
@@ -75,6 +81,15 @@ namespace HarvestDataService
 
             }
 
+        }
+
+        private string GetServiceVersion(string serviceName)
+        {
+
+            // Get the service controller for the specified service name
+            Version serviceVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+            return serviceVersion.ToString();
         }
 
         private void ExecuteADData()

@@ -20,6 +20,8 @@ namespace HarvestDataService
         void InsertBulkUsersADData(DataTable users);
 
         string GetAD_Domain();
+        void InsertVersionNoIfNotFound(string versionNo);
+
 
 
 

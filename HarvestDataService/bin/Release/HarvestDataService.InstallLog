@@ -27,3 +27,16 @@ Affected parameters are:
    logtoconsole = 
    logfile = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
    assemblypath = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing assembly 'E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing service CV Harvest Data Service...
+Service CV Harvest Data Service has been successfully installed.
+Creating EventLog source CV Harvest Data Service in log Application...
+Committing assembly 'E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
