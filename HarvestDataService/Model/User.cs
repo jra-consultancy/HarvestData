@@ -35,6 +35,7 @@ namespace HarvestDataService.Model
         public string SamAccountName { get; set; }
         public string StreetAddress { get; set; }
         public string CountryCode { get; set; }
+        public string OU { get; set; }
 
     }
 }

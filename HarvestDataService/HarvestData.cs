@@ -221,6 +221,20 @@ namespace HarvestDataService
                                 asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
                                 asset.ServicePrincipalName = result.Properties["servicePrincipalName"].Count > 0 ? result.Properties["servicePrincipalName"][0].ToString() : "";
                                 asset.MemberOf = result.Properties["memberOf"].Count > 0 ? result.Properties["memberOf"][0].ToString() : "";
+                                string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                                string[] parts = distinguishedName.Split(',');
+
+                                // iterate over the parts in reverse order and look for the "OU=" component
+                                foreach (string part in parts.Reverse())
+                                {
+                                    if (part.StartsWith("OU="))
+                                    {
+                                        // if an OU component is found, extract the name and return it
+                                        asset.OU = part.Substring(3);
+                                        break;
+                                    }
+                                }
 
                                 assets.Add(asset);
                                 count++;
@@ -228,7 +242,7 @@ namespace HarvestDataService
                             }
                             results.Dispose();
                         }
-                        
+
                         searcher.Dispose();
                         entry.Dispose();
                     }
@@ -293,7 +307,7 @@ namespace HarvestDataService
                         domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
 
                     }
-                    if(domainPath == null)
+                    if (domainPath == null)
                     {
                         break;
                     }
@@ -316,7 +330,7 @@ namespace HarvestDataService
                         searcher.PropertiesToLoad.AddRange(new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
                     "department", "description", "displayName", "mail","employeeID","enabled","uSNCreated","logonCount","mailNickname",
                     "manager","PasswordExpired","physicalDeliveryOfficeName","postalCode","sn","telephoneNumber","title","userAccountControl",
-                    "sAMAccountName","streetAddress","countryCode"
+                    "sAMAccountName","streetAddress","countryCode","distinguishedName"
                      });
                         searcher.PageSize = 6000;
                         int count = 0;
@@ -361,6 +375,21 @@ namespace HarvestDataService
                                 user.SamAccountName = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
                                 user.StreetAddress = result.Properties["streetAddress"].Count > 0 ? result.Properties["streetAddress"][0].ToString() : "";
                                 user.CountryCode = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
+                                string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                                string[] parts = distinguishedName.Split(',');
+
+                                // iterate over the parts in reverse order and look for the "OU=" component
+                                foreach (string part in parts.Reverse())
+                                {
+                                    if (part.StartsWith("OU="))
+                                    {
+                                        // if an OU component is found, extract the name and return it
+                                        user.OU = part.Substring(3);
+                                        break;
+                                    }
+                                }
+
 
 
                                 users.Add(user);
@@ -368,7 +397,7 @@ namespace HarvestDataService
                             }
                             results.Dispose();
                         }
-                        
+
                         searcher.Dispose();
                         entry.Dispose();
                     }

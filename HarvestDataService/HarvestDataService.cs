@@ -63,7 +63,7 @@ namespace HarvestDataService
         {
             //HarvestData parser = new HarvestData();
             //parser.Harvest();
-            DateTime startTime = DateTime.Today.AddHours(5);
+            DateTime startTime = DateTime.Today.AddHours(4).AddMinutes(30);
 
             // If the start time has already passed today, schedule for the next day
             if (startTime < DateTime.Now)

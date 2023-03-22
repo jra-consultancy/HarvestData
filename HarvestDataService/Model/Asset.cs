@@ -35,6 +35,7 @@ namespace HarvestDataService.Model
         public string ServicePrincipalName { get; set; }
         public string MemberOf { get; set; }
         public string UserAccountControl { get; set; }
+        public string OU { get; set; }
 
 
 
