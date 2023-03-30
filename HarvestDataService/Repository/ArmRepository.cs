@@ -379,5 +379,36 @@ namespace HarvestDataService
                 }
             }
         }
+
+        public void InsertAD_DomainName(string domainname)
+        {
+            string query = "UPDATE [dbo].[SystemGlobalProperties] SET [PropertyValue] = @domainName WHERE [PropertyName] = @value";
+
+
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
+                {
+                    cmd.Parameters.AddWithValue("@domainName", domainname);
+                    cmd.Parameters.AddWithValue("@value", value);
+
+                    _connectionDB.con.Open();
+                    cmd.ExecuteNonQuery();
+                    _connectionDB.con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("UpdateAssetStatus Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //throw ex;
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
     }
 }

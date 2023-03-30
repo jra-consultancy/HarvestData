@@ -21,6 +21,7 @@ namespace HarvestDataService
 
         string GetAD_Domain();
         void InsertVersionNoIfNotFound(string versionNo);
+        void InsertAD_DomainName(string domainname);
 
 
 

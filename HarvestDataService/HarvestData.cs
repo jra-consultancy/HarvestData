@@ -94,6 +94,12 @@ namespace HarvestDataService
 
         private void ExecuteADData()
         {
+            List<Asset> assets = GetComputerADData();
+            if (assets.Count() > 0)
+            {
+                _iArmRepo.InsertBulkAssetsADData(ConvertToDataTable(assets));
+
+            }
             List<User> users = GetUserADData();
             if (users.Count() > 0)
             {
@@ -101,23 +107,19 @@ namespace HarvestDataService
 
             }
 
-            List<Asset> assets = GetComputerADData();
-            if (assets.Count() > 0)
-            {
-                _iArmRepo.InsertBulkAssetsADData(ConvertToDataTable(assets));
-
-            }
         }
 
         private List<Asset> GetComputerADData()
         {
             try
             {
+                string tempDomainValue = "";
                 List<Asset> assets = new List<Asset>();
 
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = "";
-                strDNSDomain = _iArmRepo.GetAD_Domain();
+                string tempstrDNSDomain = "";
+                strDNSDomain = tempstrDNSDomain  = _iArmRepo.GetAD_Domain();
                 if (String.IsNullOrEmpty(strDNSDomain))
                 {
                     strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
@@ -133,6 +135,7 @@ namespace HarvestDataService
                 for (int i = 0; i < ldapPathComponents.Length; i++)
                 {
                     domainPath = null;
+                    domainName = "";
                     dc1 = "";
                     dc1 = ldapPathComponents[i].Substring(3);
                     if (i + 1 == ldapPathComponents.Length)
@@ -240,6 +243,7 @@ namespace HarvestDataService
                                 count++;
 
                             }
+                            tempDomainValue = domainPath.Substring(7);
                             results.Dispose();
                         }
 
@@ -250,6 +254,10 @@ namespace HarvestDataService
                     {
                         _logger.Log("Harvest GetComputerADData: Domain Path is Invalid" + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                     }
+                }
+                if (String.IsNullOrEmpty(tempstrDNSDomain))
+                {
+                    _iArmRepo.InsertAD_DomainName(tempDomainValue);
                 }
                 return assets;
             }
