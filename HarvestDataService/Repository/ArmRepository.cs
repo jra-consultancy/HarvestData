@@ -283,7 +283,15 @@ namespace HarvestDataService
                     cmd.Parameters.AddWithValue("@propertyName", value);
 
                     //var dr = cmd.ExecuteReader();
-                    domainPath = (string)cmd.ExecuteScalar();
+                    object result = cmd.ExecuteScalar();
+                    if (result == DBNull.Value || result == "")
+                    {
+                        domainPath = null;
+                    }
+                    else
+                    {
+                        domainPath = (string)result;
+                    }
 
                     //if (dr.Read()) // Read() returns TRUE if there are records to read, or FALSE if there is nothing
                     //{
