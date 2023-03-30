@@ -1,4 +1,15 @@
 
+/****** Object:  Table [dbo].[AD_Assets]    Script Date: 3/30/2023 2:47:51 PM ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AD_Assets]') AND type in (N'U'))
+DROP TABLE [dbo].[AD_Assets]
+GO
+
+/****** Object:  Table [dbo].[AD_Assets]    Script Date: 3/30/2023 2:47:51 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
 
 CREATE TABLE [dbo].[AD_Assets](
 	[AssetID] [nvarchar](255) NOT NULL,
@@ -30,6 +41,7 @@ CREATE TABLE [dbo].[AD_Assets](
 	[ServicePrincipalName] [nvarchar](255) NULL,
 	[MemberOf] [nvarchar](255) NULL,
 	[UserAccountControl] [nvarchar](255) NULL,
+	[OU] [nvarchar](250) NULL,
  CONSTRAINT [PK_AD_Assets] PRIMARY KEY CLUSTERED 
 (
 	[AssetID] ASC

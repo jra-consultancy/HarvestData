@@ -1,6 +1,9 @@
 
+/****** Object:  UserDefinedTableType [dbo].[AD_AssetTableType]    Script Date: 3/30/2023 2:48:15 PM ******/
+DROP TYPE [dbo].[AD_AssetTableType]
+GO
 
-/****** Object:  UserDefinedTableType [dbo].[AD_AssetTableType]    Script Date: 2/27/2023 5:40:26 PM ******/
+/****** Object:  UserDefinedTableType [dbo].[AD_AssetTableType]    Script Date: 3/30/2023 2:48:15 PM ******/
 CREATE TYPE [dbo].[AD_AssetTableType] AS TABLE(
 	[AssetID] [nvarchar](255) NOT NULL,
 	[Description] [nvarchar](255) NULL,
@@ -28,7 +31,8 @@ CREATE TYPE [dbo].[AD_AssetTableType] AS TABLE(
 	[WhenChanged] [datetime] NULL,
 	[ServicePrincipalName] [nvarchar](255) NULL,
 	[MemberOf] [nvarchar](255) NULL,
-	[UserAccountControl] [nvarchar](255) NULL
+	[UserAccountControl] [nvarchar](255) NULL,
+	[OU] [nvarchar](250) NULL
 )
 GO
 

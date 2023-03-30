@@ -1,4 +1,16 @@
 
+/****** Object:  Table [dbo].[AD_User]    Script Date: 3/30/2023 2:47:28 PM ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AD_User]') AND type in (N'U'))
+DROP TABLE [dbo].[AD_User]
+GO
+
+/****** Object:  Table [dbo].[AD_User]    Script Date: 3/30/2023 2:47:28 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
 CREATE TABLE [dbo].[AD_User](
 	[UserId] [nvarchar](255) NOT NULL,
 	[AccountExpirationDate] [datetime] NULL,
@@ -28,6 +40,7 @@ CREATE TABLE [dbo].[AD_User](
 	[SamAccountName] [nvarchar](255) NULL,
 	[StreetAddress] [nvarchar](max) NULL,
 	[CountryCode] [nvarchar](50) NULL,
+	[OU] [nvarchar](250) NULL,
  CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC

@@ -1,6 +1,10 @@
 
 
-/****** Object:  UserDefinedTableType [dbo].[AD_UserTableType]    Script Date: 2/27/2023 5:40:40 PM ******/
+/****** Object:  UserDefinedTableType [dbo].[AD_UserTableType]    Script Date: 3/30/2023 2:48:26 PM ******/
+DROP TYPE [dbo].[AD_UserTableType]
+GO
+
+/****** Object:  UserDefinedTableType [dbo].[AD_UserTableType]    Script Date: 3/30/2023 2:48:26 PM ******/
 CREATE TYPE [dbo].[AD_UserTableType] AS TABLE(
 	[UserId] [nvarchar](50) NOT NULL,
 	[AccountExpirationDate] [datetime] NULL,
@@ -27,7 +31,8 @@ CREATE TYPE [dbo].[AD_UserTableType] AS TABLE(
 	[UserAccountControl] [nvarchar](255) NULL,
 	[SamAccountName] [nvarchar](255) NULL,
 	[StreetAddress] [nvarchar](max) NULL,
-	[CountryCode] [nvarchar](50) NULL
+	[CountryCode] [nvarchar](50) NULL,
+	[OU] [nvarchar](250) NULL
 )
 GO
 
