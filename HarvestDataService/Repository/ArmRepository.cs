@@ -345,7 +345,7 @@ namespace HarvestDataService
                     }
                 }
                 _connectionDB.con.Close();
-                if(String.IsNullOrEmpty(version))
+                if(String.IsNullOrEmpty(version) || version != versionNo)
                 {
                     string sql = "UPDATE [dbo].[SystemGlobalProperties] SET PropertyValue = @versionNo WHERE PropertyName = @propertyName";
                     _connectionDB.con.Open();
