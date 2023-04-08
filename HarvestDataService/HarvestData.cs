@@ -71,7 +71,7 @@ namespace HarvestDataService
             {
                 string version = GetServiceVersion(serviceName);
                 _iArmRepo.InsertVersionNoIfNotFound(version);
-                //ExecutePing(type = "Ping");
+                ExecutePing(type = "Ping");
                 //ExecuteWmiData(type = "WMI");
                 ExecuteADData();
             }
