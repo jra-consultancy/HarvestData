@@ -122,7 +122,9 @@ namespace HarvestDataService
                 strDNSDomain = tempstrDNSDomain  = _iArmRepo.GetAD_Domain();
                 if (String.IsNullOrEmpty(strDNSDomain))
                 {
-                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    //strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
+
                 }
                 string[] ldapPathComponents = strDNSDomain.Split(',');
                 string domainName = "";
@@ -280,7 +282,9 @@ namespace HarvestDataService
                 strDNSDomain = _iArmRepo.GetAD_Domain();
                 if (String.IsNullOrEmpty(strDNSDomain))
                 {
-                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    //strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
+
                 }
 
                 //string strDNSDomain = "DC=manufacture,DC=astellas,DC=net";
