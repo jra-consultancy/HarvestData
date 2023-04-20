@@ -179,3 +179,59 @@ The file is located at E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataServ
 The Rollback phase completed successfully.
 
 The transacted install has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Install phase completed successfully, and the Commit phase is beginning.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Commit phase completed successfully.
+
+The transacted install has completed.
+
+
+The uninstall is beginning.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The uninstall has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Install phase completed successfully, and the Commit phase is beginning.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Commit phase completed successfully.
+
+The transacted install has completed.
+
+
+The uninstall is beginning.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The uninstall has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Install phase completed successfully, and the Commit phase is beginning.
+See the contents of the log file for the C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe assembly's progress.
+The file is located at C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog.
+
+The Commit phase completed successfully.
+
+The transacted install has completed.

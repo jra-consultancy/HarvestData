@@ -40,3 +40,58 @@ Affected parameters are:
    logtoconsole = 
    logfile = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
    assemblypath = E:\work\Harvest Data\CVUpload\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing service CV Harvest Data Service...
+Service CV Harvest Data Service has been successfully installed.
+Creating EventLog source CV Harvest Data Service in log Application...
+Committing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Uninstalling assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Removing EventLog source CV Harvest Data Service.
+Service CV Harvest Data Service is being removed from the system...
+Service CV Harvest Data Service was successfully removed from the system.
+Installing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing service CV Harvest Data Service...
+Service CV Harvest Data Service has been successfully installed.
+Creating EventLog source CV Harvest Data Service in log Application...
+Committing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Uninstalling assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Removing EventLog source CV Harvest Data Service.
+Service CV Harvest Data Service is being removed from the system...
+Service CV Harvest Data Service was successfully removed from the system.
+Installing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
+Installing service CV Harvest Data Service...
+Service CV Harvest Data Service has been successfully installed.
+Creating EventLog source CV Harvest Data Service in log Application...
+Committing assembly 'C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.InstallLog
+   assemblypath = C:\Users\cvadmin\Source\Repos\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe
