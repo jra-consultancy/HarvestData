@@ -11,7 +11,7 @@ namespace HarvestDataService
     public interface IArmRepository
     {
         
-        string GetFileLocation(int Key);
+        //string GetFileLocation(int Key);
         DataTable GetAssetData(string type);
         void InsertBulkAssetData(DataTable pingResult);
         void UpdateAssetStatus(string type);

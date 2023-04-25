@@ -1,4 +1,5 @@
 ﻿using HarvestDataService.Model;
+using HarvestDataService.Service;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -18,75 +19,19 @@ namespace HarvestDataService
     public class ArmRepository : IArmRepository
     {
         private ConnectionDb _connectionDB;
-        private readonly ILogger _logger;
-        private string UploadLogFile = "";
         private string value = "AD_Domain";
         private string HVersion = "Harvester_version";
         private string HVersionTime = "Harvester_InstalledDate";
+
+        Logger4net log;
         public ArmRepository()
         {
-            _logger = Logger.GetInstance;
-
             _connectionDB = new ConnectionDb();
-            UploadLogFile = GetFileLocation(0);
+            log = new Logger4net();
         }
 
 
-        public string GetFileLocation(int Key)
-        {
-            //use condition for key and set property 
-            string propertyName = "";
-            if (Key == 0)
-            {
-                propertyName = Enum.GetName(typeof(KeyNames), 0);
-            }
-
-
-
-            string location = "";
-            //string sourceTableQuery = "Select PropertyValue from [SystemGlobalProperties] WHERE [PropertyName] = @propertyName";
-            string sourceTableQuery = "select [dbo].[fnGlobalProperty](@propertyName) AS PropertyValue";
-
-            try
-            {
-                _connectionDB.con.Open();
-                using (SqlCommand cmd = new SqlCommand(sourceTableQuery, _connectionDB.con))
-                {
-                    cmd.Parameters.AddWithValue("@propertyName", propertyName);
-
-                    //var dr = cmd.ExecuteReader();
-                    location = (string)cmd.ExecuteScalar();
-
-                    //if (dr.Read()) // Read() returns TRUE if there are records to read, or FALSE if there is nothing
-                    //{
-                    //    location = dr["PropertyValue"].ToString();
-
-                    //}
-
-                }
-                _connectionDB.con.Close();
-                return location;
-            }
-            catch (Exception ex)
-            {
-                using (EventLog eventLog = new EventLog("Application"))
-                {
-                    eventLog.Source = "Application";
-                    eventLog.WriteEntry("Harvest Service Error Messege: " + ex.Message, EventLogEntryType.Error, 999, 1);
-                }
-                _logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-
-                throw ex;
-            }
-            finally
-            {
-                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
-                {
-                    _connectionDB.con.Close();
-                }
-            }
-
-        }
+        
 
 
         public DataTable GetAssetData(string type)
@@ -107,8 +52,8 @@ namespace HarvestDataService
             }
             catch (Exception ex)
             {
-                _logger.Log("GetAssetData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-
+                //_logger.Log("GetAssetData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("GetAssetData Exception: " + ex.Message + ex.InnerException, "ExecuteADData");
                 throw ex;
             }
 
@@ -165,8 +110,8 @@ namespace HarvestDataService
             }
             catch (Exception ex)
             {
-                _logger.Log("InsertBulkAssetData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-
+                //_logger.Log("InsertBulkAssetData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertBulkAssetData Exception: " + ex.Message + ex.InnerException, "InsertBulkAssetData");
                 throw ex;
             }
 
@@ -197,7 +142,8 @@ namespace HarvestDataService
             }
             catch (Exception ex)
             {
-                _logger.Log("UpdateAssetStatus Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("UpdateAssetStatus Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("UpdateAssetStatus Exception: " + ex.Message + ex.InnerException, "UpdateAssetStatus");
                 //throw ex;
             }
             finally
@@ -223,12 +169,14 @@ namespace HarvestDataService
                     cmd.ExecuteNonQuery();
                     _connectionDB.con.Close();
                 }
-                _logger.Log("InsertBulkAssetsADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("InsertBulkAssetsADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertBulkAssetsADData Sucessfull", "");
 
             }
             catch (Exception ex)
             {
-                _logger.Log("InsertBulkAssetsADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("InsertBulkAssetsADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertBulkAssetsADData Exception: " + ex.Message + ex.InnerException, "InsertBulkAssetsADData");
                 //throw ex;
             }
             finally
@@ -254,12 +202,15 @@ namespace HarvestDataService
                     cmd.ExecuteNonQuery();
                     _connectionDB.con.Close();
                 }
-                _logger.Log("InsertBulkUsersADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                
+                //_logger.Log("InsertBulkUsersADData Sucessfull", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertBulkUsersADData Sucessfull", "");
 
             }
             catch (Exception ex)
             {
-                _logger.Log("InsertBulkUsersADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("InsertBulkUsersADData Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertBulkUsersADData Exception: "+ ex.Message + ex.InnerException, "InsertBulkUsersADData");
                 //throw ex;
             }
             finally
@@ -310,7 +261,8 @@ namespace HarvestDataService
                     eventLog.Source = "Application";
                     eventLog.WriteEntry("Harvest Service Error Messege: " + ex.Message, EventLogEntryType.Error, 999, 1);
                 }
-                _logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("GetAdLocation Exception: " + ex.Message + ex.InnerException, "GetAdLocation");
 
                 throw ex;
             }
@@ -375,7 +327,8 @@ namespace HarvestDataService
                     eventLog.Source = "Application";
                     eventLog.WriteEntry("Harvest Service Error Messege: " + ex.Message, EventLogEntryType.Error, 999, 1);
                 }
-                _logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("GetFileLocation Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertVersionNoIfNotFound :" + ex.Message + ex.InnerException, "InsertVersionNoIfNotFound");
 
                 throw ex;
             }
@@ -407,7 +360,8 @@ namespace HarvestDataService
             }
             catch (Exception ex)
             {
-                _logger.Log("UpdateAssetStatus Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                //_logger.Log("UpdateAssetStatus Exception: " + ex.Message, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+                log.PushLog("InsertAD_DomainName :" + ex.Message + ex.InnerException, "InsertAD_DomainName");
                 //throw ex;
             }
             finally

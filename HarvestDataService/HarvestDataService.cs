@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarvestDataService.Service;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -17,23 +18,25 @@ namespace HarvestDataService
 {
     public partial class HarvestDataService : ServiceBase
     {
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
 
         readonly System.Timers.Timer _timer = new System.Timers.Timer();
-        private string UploadLogFile = "";
+        //private string UploadLogFile = "";
         private System.Timers.Timer timer;
+        Logger4net log;
 
 
         ArmRepository _iArmRepo = new ArmRepository();
         public HarvestDataService()
         {
 
-            UploadLogFile = _iArmRepo.GetFileLocation(0);
-            _logger = Logger.GetInstance;
-            CreateLogDirectory(UploadLogFile);
+            //UploadLogFile = _iArmRepo.GetFileLocation(0);
+            //_logger = Logger.GetInstance;
+            //CreateLogDirectory(UploadLogFile);
+
 
             //InitializeComponents();
-            
+            log = new Logger4net();
 
         }
 
@@ -47,13 +50,14 @@ namespace HarvestDataService
             }
             if (!Directory.Exists(uploadLogFile))
                 Directory.CreateDirectory(uploadLogFile);
-            _logger.Log("Creating Log Directory", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+            //_logger.Log("Creating Log Directory", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
         }
 
         protected override void OnStart(string[] args)
         {
-            _logger.Log("Service started", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+            //_logger.Log("Service started", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+            log.PushLog("Service started", "Service started");
 
             InitializeComponents();
         }
@@ -83,6 +87,8 @@ namespace HarvestDataService
             _timer.Start();
             _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
             //_timer.Elapsed += (new HarvestData()).Harvest;
+
+            log.PushLog("Harvest Interval " + _timer.Interval.ToString(), "Service started");
         }
 
 
@@ -90,7 +96,8 @@ namespace HarvestDataService
         {
             _timer.Enabled = false;
             _timer.Stop();
-            _logger.Log("Service stopped", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+            //_logger.Log("Service stopped", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+            log.PushLog("Service stopped", "Service stopped");
 
         }
 
