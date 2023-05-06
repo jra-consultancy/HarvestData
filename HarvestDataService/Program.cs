@@ -17,6 +17,7 @@ namespace HarvestDataService
         {
             //var fileParser = new HarvestData();
             //fileParser.Harvest();
+            //fileParser.PingAsset();
             //Console.ReadLine();
 
             ServiceBase[] ServicesToRun;

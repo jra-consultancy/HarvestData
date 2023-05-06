@@ -10,9 +10,9 @@ namespace HarvestDataService
 {
     public interface IArmRepository
     {
-        
+
         //string GetFileLocation(int Key);
-        DataTable GetAssetData(string type);
+        DataTable GetAssetData(string type, int Cadence);
         void InsertBulkAssetData(DataTable pingResult);
         void UpdateAssetStatus(string type);
 
@@ -23,7 +23,8 @@ namespace HarvestDataService
         void InsertVersionNoIfNotFound(string versionNo);
         void InsertAD_DomainName(string domainname);
 
-
+        void UpdateHarvestResult(DataTable Res, string Type);
+        void ResetHarvestResult(string Type);
 
 
     }

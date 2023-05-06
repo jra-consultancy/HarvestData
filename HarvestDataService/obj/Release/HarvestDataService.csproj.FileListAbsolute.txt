@@ -93,7 +93,6 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Memory.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Numerics.Vectors.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Runtime.CompilerServices.Unsafe.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Threading.Tasks.Extensions.xml
-D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csproj.AssemblyReference.cache
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.HarvestDataService.resources
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.ProjectInstaller.resources
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csproj.GenerateResource.cache
@@ -101,3 +100,9 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csp
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csproj.CopyComplete
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.exe
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.pdb
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\HarvestDataService.exe.manifest
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\HarvestDataService.application
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\log4net.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\log4net.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.exe.manifest
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.application

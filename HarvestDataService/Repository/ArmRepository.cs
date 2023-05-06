@@ -34,17 +34,19 @@ namespace HarvestDataService
         
 
 
-        public DataTable GetAssetData(string type)
+        public DataTable GetAssetData(string type,int Cadence)
         {
             try
             {
                 DataTable dtSource = new DataTable();
-                string sourceTableQuery = "Select HarvestID,AssetID from A_AssetHarvest WHERE Status = 0 AND HarvestType = @type";
+                string sourceTableQuery = "SP_GetAHarvester";
                 using (SqlCommand cmd = new SqlCommand(sourceTableQuery, _connectionDB.con))
                 {
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
-                        da.SelectCommand.Parameters.AddWithValue("@type", type);
+                        da.SelectCommand.CommandType = CommandType.StoredProcedure;
+                        da.SelectCommand.Parameters.AddWithValue("@Type", type);
+                        da.SelectCommand.Parameters.AddWithValue("@Cadence", Cadence);
                         da.Fill(dtSource);
                     }
                 }
@@ -221,6 +223,119 @@ namespace HarvestDataService
                 }
             }
         }
+
+        public void UpdateHarvestResult(DataTable Res, string Type)
+        {
+            try
+            {
+                string query = "[dbo].[SP_UpdateAHarvesterResult]";
+
+                using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Data", Res);
+                    cmd.Parameters.AddWithValue("@Type", Type);
+                    _connectionDB.con.Open();
+                    cmd.ExecuteNonQuery();
+                    _connectionDB.con.Close();
+                }
+
+                log.PushLog("UpdateHarvestResult Sucessfull" + Type, "");
+
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("UpdateHarvestResult Exception: " + Type + ex.Message + ex.InnerException, "UpdateHarvestResult");
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
+
+
+        public void ResetHarvestResult(string Type)
+        {
+            try
+            {
+                string query = "[dbo].[SP_ResetADHarvester]";
+
+                using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Type", Type);
+                    _connectionDB.con.Open();
+                    cmd.ExecuteNonQuery();
+                    _connectionDB.con.Close();
+                }
+
+                log.PushLog("ResetHarvestResult Sucessfull" + Type, "");
+
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("ResetHarvestResult Exception: " + Type + ex.Message + ex.InnerException, "ResetHarvestResult");
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+        }
+
+        public string GetGlobalProperties(string propertyName)
+        {
+
+            string location = "";
+            //string sourceTableQuery = "Select PropertyValue from [SystemGlobalProperties] WHERE [PropertyName] = @propertyName";
+            string sourceTableQuery = "select [dbo].[fnGlobalProperty](@propertyName) AS PropertyValue";
+
+            try
+            {
+                _connectionDB.con.Open();
+                using (SqlCommand cmd = new SqlCommand(sourceTableQuery, _connectionDB.con))
+                {
+                    cmd.Parameters.AddWithValue("@propertyName", propertyName);
+
+                    //var dr = cmd.ExecuteReader();
+                    location = (string)cmd.ExecuteScalar();
+
+                    //if (dr.Read()) // Read() returns TRUE if there are records to read, or FALSE if there is nothing
+                    //{
+                    //    location = dr["PropertyValue"].ToString();
+
+                    //}
+
+                }
+                _connectionDB.con.Close();
+                return location;
+            }
+            catch (Exception ex)
+            {
+                using (EventLog eventLog = new EventLog("Application"))
+                {
+                    eventLog.Source = "Application";
+                    eventLog.WriteEntry("CV Harvest Service Error Messege: " + ex.Message, EventLogEntryType.Error, 999, 1);
+                }
+
+                log.PushLog("GetGlobalProperties Exception: :" + ex.Message + ex.InnerException, "GetGlobalProperties");
+                throw ex;
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+
+        }
+
         public string GetAD_Domain()
         {
             string sourceTableQuery = "select [dbo].[fnGlobalProperty](@propertyName) AS PropertyValue";

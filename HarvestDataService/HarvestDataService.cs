@@ -18,26 +18,20 @@ namespace HarvestDataService
 {
     public partial class HarvestDataService : ServiceBase
     {
-        //private readonly ILogger _logger;
+       
 
         readonly System.Timers.Timer _timer = new System.Timers.Timer();
-        //private string UploadLogFile = "";
-        private System.Timers.Timer timer;
+        readonly System.Timers.Timer _timerPing = new System.Timers.Timer();
+        readonly System.Timers.Timer _timerPingReset = new System.Timers.Timer();
+        readonly System.Timers.Timer _timerWMI = new System.Timers.Timer();
+
         Logger4net log;
 
-
+        HarvestData harv = new HarvestData();
         ArmRepository _iArmRepo = new ArmRepository();
         public HarvestDataService()
         {
-
-            //UploadLogFile = _iArmRepo.GetFileLocation(0);
-            //_logger = Logger.GetInstance;
-            //CreateLogDirectory(UploadLogFile);
-
-
-            //InitializeComponents();
             log = new Logger4net();
-
         }
 
         private void CreateLogDirectory(string uploadLogFile)
@@ -50,13 +44,12 @@ namespace HarvestDataService
             }
             if (!Directory.Exists(uploadLogFile))
                 Directory.CreateDirectory(uploadLogFile);
-            //_logger.Log("Creating Log Directory", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-
+   
         }
 
         protected override void OnStart(string[] args)
         {
-            //_logger.Log("Service started", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
+
             log.PushLog("Service started", "Service started");
 
             InitializeComponents();
@@ -88,14 +81,30 @@ namespace HarvestDataService
             _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
             //_timer.Elapsed += (new HarvestData()).Harvest;
 
-            log.PushLog("Harvest Interval " + _timer.Interval.ToString(), "Service started");
+            int intInterval = Convert.ToInt32(1);
+            log.PushLog("_timerPing Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
+            // Set up the timer to run at the scheduled time every 24 hours
+            _timerPing.AutoReset = true;
+            _timerPing.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
+            _timerPing.Enabled = true;
+            _timerPing.Elapsed += (sender1, e1) => harv.PingAssetAsync(sender1, e1);
+            _timerPing.Start();
+
+   
+
+
+            log.PushLog("Service started", "Service started");
         }
 
 
         protected override void OnStop()
         {
             _timer.Enabled = false;
+            _timerPing.Enabled = false;
+            _timerPingReset.Enabled = false;
             _timer.Stop();
+            _timerPing.Stop();
+            _timerPingReset.Stop();
             //_logger.Log("Service stopped", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
             log.PushLog("Service stopped", "Service stopped");
 

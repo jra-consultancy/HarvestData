@@ -36,10 +36,17 @@ namespace HarvestDataService
         private string serviceName = "CV Harvest Data Service";
         Logger4net log;
 
+        int CurrentHour = 1;
+
+        private bool isPingAssetRun = false; 
+
         public HarvestData()
         {
             _iArmRepo = new ArmRepository();
             log  = new Logger4net();
+            
+            isPingAssetRun = false;
+
             //log.PushLog("Komang Here", "TesLog");
         }
         private static readonly object Mylock = new object();
@@ -50,8 +57,6 @@ namespace HarvestDataService
             {
                 string version = GetServiceVersion(serviceName);
                 _iArmRepo.InsertVersionNoIfNotFound(version);
-                //ExecutePing(type = "Ping");
-                //ExecuteWmiData(type = "WMI");
                 ExecuteADData();
             }
             catch (Exception ex)
@@ -66,14 +71,86 @@ namespace HarvestDataService
 
 
         }
+
+        public void PingAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
+        {
+  
+            try
+            {
+                PingAsset();
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("PingAsset :" + ex.Message + ex.InnerException, "PingAsset");
+            }
+            finally
+            {
+                Monitor.Exit(Mylock);
+            }
+
+
+        }
+
+
+        public void ResetPingAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+            try
+            {
+                _iArmRepo.ResetHarvestResult("Ping");
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("ResetPingAssetAsync :" + ex.Message + ex.InnerException, "ResetPingAssetAsync");
+            }
+     
+        }
+
+
+
+        public void PingAsset() {
+
+        
+
+            DateTime now = DateTime.Now;
+            //if (now.Minute > 10 && now.Minute <= 15)
+            if (now.Minute > 30 && now.Minute <= 35)
+            {
+                
+            }
+            else {
+               
+                return;
+            }
+
+            if (isPingAssetRun)
+            {
+                log.PushLog("PingAsset : last process is running", "");
+                return;
+            }
+
+            try
+            {
+                isPingAssetRun = true;
+                ExecutePing(type = "Ping", now.Hour+1);
+
+                isPingAssetRun = false;
+            }
+            catch (Exception ex)
+            {
+                isPingAssetRun = false;
+                log.PushLog("Harvest :" + ex.Message + ex.InnerException, "ExecuteADData");
+
+            }
+        }
+
+
         public void Harvest()
         {
             try
             {
                 string version = GetServiceVersion(serviceName);
                 _iArmRepo.InsertVersionNoIfNotFound(version);
-                //ExecutePing(type = "Ping");
-                //ExecuteWmiData(type = "WMI");
                 ExecuteADData();
             }
             catch (Exception ex)
@@ -430,28 +507,40 @@ namespace HarvestDataService
             }
         }
 
-        private void ExecutePing(string type)
+        private void ExecutePing(string type,int Cadence)
         {
-            DataTable pingResult = new DataTable();
+            List<AD_HarvesterResult> pingResult = new List<AD_HarvesterResult>();
 
-            DataTable dt = _iArmRepo.GetAssetData(type);
+            DataTable dt = _iArmRepo.GetAssetData(type, Cadence);
+
 
             if (dt.Rows.Count > 0)
             {
-                pingResult = GetAllMachinePingData(dt);
-                _iArmRepo.InsertBulkAssetData(pingResult);
-                _iArmRepo.UpdateAssetStatus(type);
+                log.PushLog("PingAsset : " + dt.Rows.Count.ToString() + " Assets , Cadence at " + Cadence.ToString(), "");
+
+                pingResult =  GetAllMachinePingData(dt);
+
+                _iArmRepo.UpdateHarvestResult(ConvertToDataTable(pingResult), type);
+
+                List<AD_HarvesterResult> IsPingSuccessList = pingResult
+                                        .Where(m => m.IsPingSuccess == true).ToList();
+
+                if (IsPingSuccessList != null) {
+                    log.PushLog("PingAsset success : " + IsPingSuccessList.Count.ToString() + " Assets", "");
+                }
+
+                
             }
             else
             {
-                log.PushLog("Harvest : A_AssetHarvest Table has no Ping data to process");
+                log.PushLog("Harvest : A_Harvester Table has no Ping data to process");
             }
         }
         private void ExecuteWmiData(string type)
         {
             DataTable wmiResult = new DataTable();
 
-            DataTable dt = _iArmRepo.GetAssetData(type);
+            DataTable dt = _iArmRepo.GetAssetData(type,1);
 
             if (dt != null)
             {
@@ -465,36 +554,30 @@ namespace HarvestDataService
             }
         }
 
-        private DataTable GetAllMachinePingData(DataTable dt)
+        private List<AD_HarvesterResult> GetAllMachinePingData(DataTable dt)
         {
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
             try
             {
-                DataTable allMachinePingData = new DataTable();
-                allMachinePingData.Columns.Add("HarvestID");
-                allMachinePingData.Columns.Add("HarvestCollectionType");
-                allMachinePingData.Columns.Add("HarvestValue");
-                allMachinePingData.Columns.Add("HarvestDate");
-
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
-                    DataRow data = allMachinePingData.NewRow();
+                    AD_HarvesterResult allMachinePingData = new AD_HarvesterResult();
 
-                    string pingStatus = GetPingStatus(dt.Rows[i]["AssetID"].ToString());
+                    bool pingStatus =  GetPingStatus(dt.Rows[i]["Item"].ToString());
 
-                    data["HarvestID"] = dt.Rows[i]["HarvestID"].ToString();
-                    data["HarvestCollectionType"] = "Ping";
-                    data["HarvestValue"] = pingStatus;
-                    data["HarvestDate"] = DateTime.Now;
-                    allMachinePingData.Rows.Add(data);
+                    //log.PushLog("PingAsset : " + dt.Rows[i]["Item"].ToString() + " Status " + pingStatus.ToString(), " ");
+
+                    allMachinePingData.IsPingSuccess = pingStatus;
+                    allMachinePingData.Item = dt.Rows[i]["Item"].ToString();
+                    ListData.Add(allMachinePingData);
 
                 }
-                return allMachinePingData;
+                return ListData;
             }
             catch (Exception ex)
             {
                 log.PushLog("Harvest GetAllMachinePingData:" + ex.Message + ex.InnerException, "GetAllMachinePingData");
-                throw ex;
-
+                return ListData;
             }
         }
         private DataTable GetAllMachineWmiData(DataTable dt)
@@ -537,20 +620,25 @@ namespace HarvestDataService
 
         }
 
-        private string GetPingStatus(string machineName)
+        private  bool GetPingStatus(string machineName)
         {
+            try {
+                Ping pingSender = new Ping();
+                PingReply reply = pingSender.Send(machineName);
 
-            Ping pingSender = new Ping();
-            PingReply reply = pingSender.Send(machineName);
+                if (reply.Status == IPStatus.Success)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false ;
+                }
 
-            if (reply.Status == IPStatus.Success)
-            {
-                return "True";
+            } catch {
+                return false;
             }
-            else
-            {
-                return "False";
-            }
+    
         }
 
         private DataRow GetHDSize(string machineName, string harvestID, DataRow data)

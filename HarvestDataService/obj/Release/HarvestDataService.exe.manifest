@@ -78,14 +78,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="49664">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="52736">
       <assemblyIdentity name="HarvestDataService" version="1.0.0.7" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>iTjAOC22X83CYUIHlwL2wPG/ZIu3Y5d1vBXMHjebFBU=</dsig:DigestValue>
+        <dsig:DigestValue>lFBbYCEyWcCbJG+TT+CT56QhqMAR69HsX2yLo6phOPA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
