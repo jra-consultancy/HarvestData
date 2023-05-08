@@ -1,19 +1,23 @@
-USE ARM_CORE
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SP_InsertADErrorLog]') AND type in (N'P'))
+DROP PROCEDURE [dbo].[SP_InsertADErrorLog]
 GO
 CREATE PROCEDURE [dbo].[SP_InsertADErrorLog]
-    @ErrorMsg nvarchar(max),
-	@Even nvarchar(255)
+    @ErrorMsg NVARCHAR(MAX),
+	@Event NVARCHAR(255)
 AS
 BEGIN
 INSERT INTO dbo.AD_ErrorLog
 (
     ErrorMsg,
-    Even,
+    Event,
     ErrorDate
 )
 VALUES
 (   @ErrorMsg, -- ErrorMsg - varchar(max)
-    @Even, -- Even - varchar(250)
+    @Event, -- Even - varchar(250)
     GETDATE()  -- ErrorDate - varchar(520)
     );
 END
+
+EXEC dbo.SP_InsertADErrorLog @ErrorMsg = N'', -- nvarchar(max)
+                             @Event = N''     -- nvarchar(255)

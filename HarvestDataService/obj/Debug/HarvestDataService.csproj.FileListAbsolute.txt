@@ -209,3 +209,4 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.exe.m
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.application
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.exe.manifest
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.application
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.AssemblyReference.cache

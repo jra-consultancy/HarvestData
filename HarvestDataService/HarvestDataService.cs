@@ -90,10 +90,20 @@ namespace HarvestDataService
             _timerPing.Elapsed += (sender1, e1) => harv.PingAssetAsync(sender1, e1);
             _timerPing.Start();
 
-   
 
 
-            log.PushLog("Service started", "Service started");
+            Thread.Sleep(10000);
+            log.PushLog("_timerWMI Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
+            // Set up the timer to run at the scheduled time every 24 hours
+            _timerWMI.AutoReset = true;
+            _timerWMI.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
+            _timerWMI.Enabled = true;
+            _timerWMI.Elapsed += (sender2, e2) => harv.WMIAssetAsync(sender2, e2);
+            _timerWMI.Start();
+
+
+
+            log.PushLog("Service Running", "");
         }
 
 
@@ -101,10 +111,10 @@ namespace HarvestDataService
         {
             _timer.Enabled = false;
             _timerPing.Enabled = false;
-            _timerPingReset.Enabled = false;
+            _timerWMI.Enabled = false;
+            _timerWMI.Stop();
             _timer.Stop();
             _timerPing.Stop();
-            _timerPingReset.Stop();
             //_logger.Log("Service stopped", @"" + UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
             log.PushLog("Service stopped", "Service stopped");
 

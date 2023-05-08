@@ -96,7 +96,7 @@ namespace HarvestDataService.Service
 
         public void UpdateLogToDb(string ErrorMsg,string Even)
         {
-            string query = "EXEC dbo.SP_InsertADErrorLog @ErrorMsg,@Even";
+            string query = "EXEC dbo.SP_InsertADErrorLog @ErrorMsg,@Event";
 
 
             try
@@ -104,7 +104,7 @@ namespace HarvestDataService.Service
                 using (SqlCommand cmd = new SqlCommand(query, _connectionDB.con))
                 {
                     cmd.Parameters.AddWithValue("@ErrorMsg", ErrorMsg);
-                    cmd.Parameters.AddWithValue("@Even", Even);
+                    cmd.Parameters.AddWithValue("@Event", Even);
                     _connectionDB.con.Open();
                     cmd.ExecuteNonQuery();
                     _connectionDB.con.Close();

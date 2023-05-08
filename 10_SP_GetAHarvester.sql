@@ -1,11 +1,5 @@
-USE [ARM_CORE]
-GO
-
-/****** Object:  StoredProcedure [dbo].[SP_Bulk_Insert_Update_Users]    Script Date: 5/3/2023 2:14:25 AM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SP_GetAHarvester]') AND type in (N'P'))
+DROP PROCEDURE [dbo].[SP_GetAHarvester]
 GO
 
 CREATE PROCEDURE [dbo].[SP_GetAHarvester]
@@ -14,9 +8,19 @@ CREATE PROCEDURE [dbo].[SP_GetAHarvester]
 AS
 BEGIN
   
-   SELECT Item  FROM dbo.A_Harvester WHERE Action = @Type AND [Count]>0 AND @Cadence%Cadence = 0;
+	IF (@Type='Ping')
+	BEGIN 
+	 SELECT Item,Action  FROM dbo.A_Harvester WHERE Action = @Type AND [Count]>0 AND @Cadence%Cadence = 0 GROUP BY Item,
+                                                                                                                   Action;
+	END
+	ELSE
+    BEGIN 
+	 SELECT Item,Action  FROM dbo.A_Harvester WHERE Action <> 'Ping' AND [Count]>0 AND @Cadence%Cadence = 0 GROUP BY Item,
+                                                                                                                     Action ORDER BY Item;
+	END
 
 END
 GO
 
 
+SELECT * FROM dbo.A_HarvesterResults

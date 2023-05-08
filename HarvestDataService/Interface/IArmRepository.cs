@@ -25,7 +25,7 @@ namespace HarvestDataService
 
         void UpdateHarvestResult(DataTable Res, string Type);
         void ResetHarvestResult(string Type);
-
+        string GetGlobalProperties(string propertyName);
 
     }
 }

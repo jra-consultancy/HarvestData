@@ -38,7 +38,8 @@ namespace HarvestDataService
 
         int CurrentHour = 1;
 
-        private bool isPingAssetRun = false; 
+        private bool isPingAssetRun = false;
+        private bool isWMIAssetRun = false;
 
         public HarvestData()
         {
@@ -83,14 +84,27 @@ namespace HarvestDataService
             {
                 log.PushLog("PingAsset :" + ex.Message + ex.InnerException, "PingAsset");
             }
-            finally
-            {
-                Monitor.Exit(Mylock);
-            }
+            
 
 
         }
 
+
+        public void WMIAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+            try
+            {
+                GetWMIAsset();
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("WMIAssetAsync :" + ex.Message + ex.InnerException, "WMIAssetAsync");
+            }
+          
+
+
+        }
 
         public void ResetPingAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -107,7 +121,9 @@ namespace HarvestDataService
         }
 
 
-
+        /// <summary>
+        ///  add by komang
+        /// </summary>
         public void PingAsset() {
 
         
@@ -119,13 +135,11 @@ namespace HarvestDataService
                 
             }
             else {
-               
                 return;
             }
 
             if (isPingAssetRun)
             {
-                log.PushLog("PingAsset : last process is running", "");
                 return;
             }
 
@@ -139,11 +153,44 @@ namespace HarvestDataService
             catch (Exception ex)
             {
                 isPingAssetRun = false;
-                log.PushLog("Harvest :" + ex.Message + ex.InnerException, "ExecuteADData");
+                log.PushLog("PingAsset :" + ex.Message + ex.InnerException, "PingAsset");
 
             }
         }
+        public void GetWMIAsset() {
 
+            DateTime now = DateTime.Now;
+            //if (now.Minute > 10 && now.Minute <= 15)
+
+            if (now.Minute > 30 && now.Minute <= 35)
+            {
+            }
+            else
+            {
+                log.PushLog("GetWMIAsset : Is Not Time Yet", "");
+                return;
+            }
+
+            if (isWMIAssetRun)
+            {
+                log.PushLog("GetWMIAsset : last process is running", "");
+                return;
+            }
+
+            try
+            {
+                isWMIAssetRun = true;
+                ExecuteWmiData(type = "WMI", now.Hour + 1);
+                isWMIAssetRun = false;
+            }
+            catch (Exception ex)
+            {
+                isWMIAssetRun = false;
+                log.PushLog("GetWMIAsset :" + ex.Message + ex.InnerException, "GetWMIAsset");
+
+            }
+
+        }
 
         public void Harvest()
         {
@@ -536,21 +583,20 @@ namespace HarvestDataService
                 log.PushLog("Harvest : A_Harvester Table has no Ping data to process");
             }
         }
-        private void ExecuteWmiData(string type)
+        private void ExecuteWmiData(string type, int Cadence)
         {
-            DataTable wmiResult = new DataTable();
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
 
-            DataTable dt = _iArmRepo.GetAssetData(type,1);
+            DataTable dt = _iArmRepo.GetAssetData(type, Cadence);
 
             if (dt != null)
             {
-                wmiResult = GetAllMachineWmiData(dt);
-                _iArmRepo.InsertBulkAssetData(wmiResult);
-                _iArmRepo.UpdateAssetStatus(type);
+                ListData = GetAllMachineWmiData(dt);
+                _iArmRepo.UpdateHarvestResult(ConvertToDataTable(ListData), type);
             }
             else
             {
-                log.PushLog("Harvest : A_AssetHarvest Table has no WMI data to process");
+                log.PushLog("Harvest : A_Harvester Table has no WMI data to process");
             }
         }
 
@@ -580,36 +626,142 @@ namespace HarvestDataService
                 return ListData;
             }
         }
-        private DataTable GetAllMachineWmiData(DataTable dt)
+        private List<AD_HarvesterResult> GetAllMachineWmiData(DataTable dt)
         {
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
             try
             {
-                DataTable allMachinePingData = new DataTable();
-                allMachinePingData.Columns.Add("HarvestID");
-                allMachinePingData.Columns.Add("HarvestCollectionType");
-                allMachinePingData.Columns.Add("HarvestValue");
-                allMachinePingData.Columns.Add("HarvestDate");
+               
+                DataTable  dtItem = dt.AsEnumerable()
+                    .GroupBy(r => new { Item = r["Item"] })
+                    .Select(g => g.OrderBy(r => r["Item"]).First())
+                .CopyToDataTable();
 
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-                    DataRow data = allMachinePingData.NewRow();
+                string Username = _iArmRepo.GetGlobalProperties("DAUsername");
+                string Password = _iArmRepo.GetGlobalProperties("DAPassword");
 
-                    allMachinePingData.Rows.Add(GetSerialNumber(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
-                    allMachinePingData.Rows.Add(GetBiosVersion(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
 
-                    allMachinePingData.Rows.Add(GetChessisType(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
+                foreach (DataRow drItem in dtItem.Rows) {
 
-                    allMachinePingData.Rows.Add(GetMemorycapacity(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
+                    string Item = drItem["Item"].ToString();
+                    try {
 
-                    allMachinePingData.Rows.Add(GetHDSize(dt.Rows[i]["AssetID"].ToString(), dt.Rows[i]["HarvestID"].ToString(), allMachinePingData.NewRow()));
+                        string connectingMachineName = "\\\\" + Item + "\\root\\cimv2";
+                        ConnectionOptions options = new ConnectionOptions();
 
-                    /*Add free space for HD*/
+                        if (Username != null && Username != "") {
+                            options.Username = Username; // replace with the actual username
+                            options.Password = Password; //  for test only 
+                        }
 
-                    //allMachinePingData.Rows.Add(data);
+                        //options.Username = "general.cp"; // replace with the actual username
+                        //options.Password = "AdIns2017"; //  for test only 
+                        
+                        ManagementScope scope = new ManagementScope(connectingMachineName, options);
+                        scope.Connect();
+
+                        string[] Action = (from row in dt.AsEnumerable()
+                                           where row.Field<string>("Item") == Item
+                                           select row.Field<string>("Action")).ToArray<string>();
+
+                        foreach (string sAction in Action) {
+                            string Value = "";
+                            string Property = "";
+
+
+                            if (sAction == "SerialNumber")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Value = disk.GetPropertyValue("SerialNumber").ToString();
+                                    Property = "SerialNumber";
+                                }
+
+                            }
+                            else if (sAction == "BIOS")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_BIOS");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Value = disk.GetPropertyValue("Name").ToString();
+                                    Property = "BIOS";
+                                }
+
+                            }
+                            else if (sAction == "ChassisTypes")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Array x = (Array)disk.GetPropertyValue("ChassisTypes");
+                                    foreach (var d in x)
+                                    {
+                                        Value = d.ToString();
+                                        Property = "ChassisTypes";
+                                    }
+                                }
+
+                            }
+                            else if (sAction == "PhysicalMemory")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_ComputerSystem");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Value = disk.GetPropertyValue("TotalPhysicalMemory").ToString();
+                                    Property = "PhysicalMemory";
+                                }
+                            }
+                            else if (sAction == "DiskDrive")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_DiskDrive");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Value = disk.GetPropertyValue("Size").ToString();
+                                    Property = "DiskDrive";
+                                }
+                            }
+                            else if (sAction == "Manufacturer")
+                            {
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                                foreach (var disk in searcher.Get())
+                                {
+                                    Value = disk.GetPropertyValue("Manufacturer").ToString();
+                                    Property = "Manufacturer";
+                                }
+                            }
+                            else {
+                                continue;
+                            }
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        }
+                    } catch { 
+                    
+                    }
 
                 }
-                return allMachinePingData;
+
+                return ListData;
             }
             catch (Exception ex)
             {
