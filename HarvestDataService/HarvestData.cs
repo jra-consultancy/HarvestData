@@ -637,8 +637,8 @@ namespace HarvestDataService
                     .Select(g => g.OrderBy(r => r["Item"]).First())
                 .CopyToDataTable();
 
-                string Username = _iArmRepo.GetGlobalProperties("DAUsername");
-                string Password = _iArmRepo.GetGlobalProperties("DAPassword");
+                //string Username = _iArmRepo.GetGlobalProperties("DAUsername");
+                //string Password = _iArmRepo.GetGlobalProperties("DAPassword");
 
 
 
@@ -650,10 +650,10 @@ namespace HarvestDataService
                         string connectingMachineName = "\\\\" + Item + "\\root\\cimv2";
                         ConnectionOptions options = new ConnectionOptions();
 
-                        if (Username != null && Username != "") {
-                            options.Username = Username; // replace with the actual username
-                            options.Password = Password; //  for test only 
-                        }
+                        //if (Username != null && Username != "") {
+                        //    options.Username = Username; // replace with the actual username
+                        //    options.Password = Password; //  for test only 
+                        //}
 
                         //options.Username = "general.cp"; // replace with the actual username
                         //options.Password = "AdIns2017"; //  for test only 
@@ -672,7 +672,7 @@ namespace HarvestDataService
 
                             if (sAction == "SerialNumber")
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
+                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
                                 ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
 
                                 foreach (var disk in searcher.Get())
