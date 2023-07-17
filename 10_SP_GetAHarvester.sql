@@ -7,20 +7,21 @@ CREATE PROCEDURE [dbo].[SP_GetAHarvester]
 	@Cadence INT
 AS
 BEGIN
-  
-	IF (@Type='Ping')
+	
+	IF(@Type = 'Warranty')
 	BEGIN 
-	 SELECT Item,Action  FROM dbo.A_Harvester WHERE Action = @Type AND [Count]>0 AND @Cadence%Cadence = 0 GROUP BY Item,
-                                                                                                                   Action;
+	SELECT A.Item,
+	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='Manufacturer'),'-')+'|'+
+	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='SerialNumber'),'-')+'|'+
+	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='SystemSKUNumber'),'-')
+	AS Action  
+	FROM dbo.A_Harvester A WITH(NOLOCK)
+	WHERE A.Action = @Type AND A.[Count]>0 AND @Cadence%A.Cadence = 0 GROUP BY A.Item,Action ORDER BY Item;
 	END
 	ELSE
-    BEGIN 
-	 SELECT Item,Action  FROM dbo.A_Harvester WHERE Action <> 'Ping' AND [Count]>0 AND @Cadence%Cadence = 0 GROUP BY Item,
-                                                                                                                     Action ORDER BY Item;
+	BEGIN 
+	SELECT Item,Action  FROM dbo.A_Harvester WITH(NOLOCK) WHERE Action = @Type AND [Count]>0 AND @Cadence%Cadence = 0 GROUP BY Item,
+                                                                                            Action ORDER BY Item;
 	END
-
 END
 GO
-
-
-SELECT * FROM dbo.A_HarvesterResults

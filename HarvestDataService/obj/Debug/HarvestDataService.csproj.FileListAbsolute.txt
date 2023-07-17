@@ -209,4 +209,9 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.exe.m
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\HarvestDataService.application
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.exe.manifest
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.application
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\linux\selenium-manager
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\macos\selenium-manager
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\windows\selenium-manager.exe
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.Support.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.AssemblyReference.cache

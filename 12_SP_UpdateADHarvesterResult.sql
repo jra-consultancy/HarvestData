@@ -16,6 +16,27 @@ UPDATE a SET Heartbeat = GETDATE() FROM dbo.Asset a
 JOIN @Data b ON a.AssetID = b.Item 
 WHERE (b.IsPingSuccess = 1)
 
+INSERT INTO dbo.A_Harvester
+(
+    Item,
+    Type,
+    Action,
+    Count,
+    Cadence,
+    DtCreate
+)
+SELECT 
+	a.Item,    -- Item - nvarchar(550)
+    'Asset',    -- Type - varchar(100)
+    'WMI',    -- Action - varchar(100)
+    a.Count, -- Count - int
+    a.Cadence, -- Cadence - int
+    GETDATE()     -- DtCreate - datetime
+FROM dbo.A_Harvester a
+JOIN @Data b ON a.Item = b.Item 
+WHERE (b.IsPingSuccess = 1 AND a.Action = @Type)
+
+
 DELETE a FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
 WHERE (b.IsPingSuccess = 1 AND a.Action = @Type)
@@ -25,7 +46,7 @@ JOIN @Data b ON a.Item = b.Item
 WHERE a.Action = @Type
 
 END
-ELSE
+ELSE IF (@Type='WMI')
 BEGIN
 
 INSERT INTO dbo.A_HarvesterResults
@@ -44,14 +65,44 @@ SELECT
  LEFT JOIN A_HarvesterResults b ON b.Item = a.Item AND b.Property = a.Property
  WHERE a.IsWMISuccess = 1 AND b.HarvesterResultId IS NULL
 
+INSERT INTO dbo.A_Harvester
+(
+    Item,
+    Type,
+    Action,
+    Count,
+    Cadence,
+    DtCreate
+)
+SELECT 
+c.Item,
+d.Type AS Type,
+'Warranty'AS  Action,
+MAX(d.Count) AS Count,
+MAX(d.Cadence) AS Cadence,
+GETDATE() AS DtCreate
+ FROM (
+SELECT a.Item
+FROM (SELECT Item FROM @Data WHERE IsWMISuccess = 1  GROUP BY Item) a
+) c 
+JOIN dbo.A_Harvester d ON d.Item = c.Item 
+WHERE d.Action = 'WMI'
+GROUP BY c.Item,
+         d.Type
+
 DELETE a FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
-WHERE (b.IsWMISuccess = 1 AND a.Action <> 'Ping')
+WHERE (b.IsWMISuccess = 1 AND a.Action = 'WMI')
 
 UPDATE a SET a.Count = a.Count - 1 FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
 WHERE a.Action <> 'Ping'
 
 END 
+ELSE
+BEGIN 
+SELECT * FROM dbo.A_Harvester
+END 
+
 END
 

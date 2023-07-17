@@ -25,6 +25,9 @@ using System.Web.Hosting;
 using System.ServiceProcess;
 using System.DirectoryServices.ActiveDirectory;
 using HarvestDataService.Service;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.DevTools;
 
 namespace HarvestDataService
 {
@@ -40,6 +43,10 @@ namespace HarvestDataService
 
         private bool isPingAssetRun = false;
         private bool isWMIAssetRun = false;
+
+        private bool IsWarrantyAssetRun = false;
+
+        private bool isDevMode = true;
 
         public HarvestData()
         {
@@ -89,7 +96,6 @@ namespace HarvestDataService
 
         }
 
-
         public void WMIAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
         {
 
@@ -102,6 +108,22 @@ namespace HarvestDataService
                 log.PushLog("WMIAssetAsync :" + ex.Message + ex.InnerException, "WMIAssetAsync");
             }
           
+
+
+        }
+
+        public void WarrantyAssetAsync(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+            try
+            {
+                GetWarrantyAsset();
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("WarrantyAssetAsync :" + ex.Message + ex.InnerException, "WarrantyAssetAsync");
+            }
+
 
 
         }
@@ -130,11 +152,12 @@ namespace HarvestDataService
 
             DateTime now = DateTime.Now;
             //if (now.Minute > 10 && now.Minute <= 15)
-            if (now.Minute > 30 && now.Minute <= 35)
+            if ((now.Minute > 30 && now.Minute <= 35) || isDevMode )
             {
                 
             }
             else {
+
                 return;
             }
 
@@ -162,18 +185,18 @@ namespace HarvestDataService
             DateTime now = DateTime.Now;
             //if (now.Minute > 10 && now.Minute <= 15)
 
-            if (now.Minute > 30 && now.Minute <= 35)
+            if ((now.Minute > 30 && now.Minute <= 35) || isDevMode)
             {
             }
             else
             {
-                log.PushLog("GetWMIAsset : Is Not Time Yet", "");
+                //log.PushLog("GetWMIAsset : Is Not Time Yet", "");
                 return;
             }
 
             if (isWMIAssetRun)
             {
-                log.PushLog("GetWMIAsset : last process is running", "");
+                //log.PushLog("GetWMIAsset : last process is running", "");
                 return;
             }
 
@@ -190,6 +213,39 @@ namespace HarvestDataService
 
             }
 
+        }
+
+        public void GetWarrantyAsset()
+        {
+            DateTime now = DateTime.Now;
+            //if (now.Minute > 10 && now.Minute <= 15)
+            if ((now.Minute > 30 && now.Minute <= 35) || isDevMode)
+            {
+
+            }
+            else
+            {
+                return;
+            }
+
+            if (IsWarrantyAssetRun)
+            {
+                return;
+            }
+
+            try
+            {
+                IsWarrantyAssetRun = true;
+                ExecuteWarranty(type = "WARR", now.Hour + 1);
+
+                IsWarrantyAssetRun = false;
+            }
+            catch (Exception ex)
+            {
+                IsWarrantyAssetRun = false;
+                log.PushLog("ExecuteWarranty :" + ex.Message + ex.InnerException, "ExecuteWarranty");
+
+            }
         }
 
         public void Harvest()
@@ -600,6 +656,24 @@ namespace HarvestDataService
             }
         }
 
+        private void ExecuteWarranty(string type, int Cadence)
+        {
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
+
+            DataTable dt = _iArmRepo.GetAssetData(type, Cadence);
+
+            if (dt != null)
+            {
+                ListData = GetAllMachineWarrantyData(dt);
+                _iArmRepo.UpdateHarvestResult(ConvertToDataTable(ListData), type);
+            }
+            else
+            {
+                log.PushLog("Harvest : A_Harvester Table has no WMI data to process");
+            }
+        }
+
+
         private List<AD_HarvesterResult> GetAllMachinePingData(DataTable dt)
         {
             List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
@@ -661,91 +735,250 @@ namespace HarvestDataService
                         ManagementScope scope = new ManagementScope(connectingMachineName, options);
                         scope.Connect();
 
-                        string[] Action = (from row in dt.AsEnumerable()
-                                           where row.Field<string>("Item") == Item
-                                           select row.Field<string>("Action")).ToArray<string>();
+                        string Value = "";
+                        string Property = "";
 
-                        foreach (string sAction in Action) {
-                            string Value = "";
-                            string Property = "";
+                        string sAction = "";
+                        //ObjectQuery query;
+                        //ManagementObjectSearcher searcher;
 
 
-                            if (sAction == "SerialNumber")
+                        try {
+                            
+                            Value = "";
+                            Property = "";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-                                foreach (var disk in searcher.Get())
-                                {
-                                    Value = disk.GetPropertyValue("SerialNumber").ToString();
-                                    Property = "SerialNumber";
-                                }
-
+                                Value = disk.GetPropertyValue("SerialNumber").ToString();
+                                Property = "SerialNumber";
                             }
-                            else if (sAction == "BIOS")
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        } 
+                        catch {
+
+                            Value = "Error!!";
+                            Property = "SerialNumber";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+
+                        try
+                        {
+                            Value = "";
+                            Property = "SystemSKUNumber";
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_BIOS");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-                                foreach (var disk in searcher.Get())
-                                {
-                                    Value = disk.GetPropertyValue("Name").ToString();
-                                    Property = "BIOS";
-                                }
-
+                                Value = disk.GetPropertyValue("SystemSKUNumber").ToString();
+                                Property = "SystemSKUNumber";
                             }
-                            else if (sAction == "ChassisTypes")
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        }
+                        catch {
+
+                            Value = "Error!!";
+                            Property = "SystemSKUNumber";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+
+
+                        try
+                        {
+                            Value = "";
+                            Property = "BIOS";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_BIOS");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-                                foreach (var disk in searcher.Get())
-                                {
-                                    Array x = (Array)disk.GetPropertyValue("ChassisTypes");
-                                    foreach (var d in x)
-                                    {
-                                        Value = d.ToString();
-                                        Property = "ChassisTypes";
-                                    }
-                                }
-
+                                Value = disk.GetPropertyValue("Name").ToString();
+                                Property = "BIOS";
                             }
-                            else if (sAction == "PhysicalMemory")
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        catch {
+
+                            Value = "Error!!";
+                            Property = "BIOS";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        try
+                        {
+                            Value = "";
+                            Property = "ChassisTypes";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_ComputerSystem");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-                                foreach (var disk in searcher.Get())
+                                Array x = (Array)disk.GetPropertyValue("ChassisTypes");
+                                foreach (var d in x)
                                 {
-                                    Value = disk.GetPropertyValue("TotalPhysicalMemory").ToString();
-                                    Property = "PhysicalMemory";
+                                    Value = d.ToString();
+                                    Property = "ChassisTypes";
                                 }
                             }
-                            else if (sAction == "DiskDrive")
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        }
+                        catch {
+
+                            Value = "Error!!";
+                            Property = "ChassisTypes";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        try
+                        {
+
+                            Value = "";
+                            Property = "PhysicalMemory";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_ComputerSystem");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_DiskDrive");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-                                foreach (var disk in searcher.Get())
-                                {
-                                    Value = disk.GetPropertyValue("Size").ToString();
-                                    Property = "DiskDrive";
-                                }
+                                Value = disk.GetPropertyValue("TotalPhysicalMemory").ToString();
+                                Property = "PhysicalMemory";
                             }
-                            else if (sAction == "Manufacturer")
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        catch {
+                            Value = "Error!!";
+                            Property = "PhysicalMemory";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        }
+
+
+                        try
+                        {
+                            Value = "";
+                            Property = "DiskDrive";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_DiskDrive");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
                             {
-                                ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
-                                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+                                Value = disk.GetPropertyValue("Size").ToString();
+                                Property = "DiskDrive";
+                            }
 
-                                foreach (var disk in searcher.Get())
-                                {
-                                    Value = disk.GetPropertyValue("Manufacturer").ToString();
-                                    Property = "Manufacturer";
-                                }
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        catch
+                        {
+                            Value = "Error!!";
+                            Property = "DiskDrive";
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+
+                        }
+                        try
+                        {
+                            Value = "";
+                            Property = "Manufacturer";
+
+                            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_SystemEnclosure");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+
+                            foreach (var disk in searcher.Get())
+                            {
+                                Value = disk.GetPropertyValue("Manufacturer").ToString();
+                                Property = "Manufacturer";
                             }
-                            else {
-                                continue;
-                            }
+
+                            AD_HarvesterResult Rw = new AD_HarvesterResult();
+                            Rw.IsWMISuccess = true;
+                            Rw.Item = Item;
+                            Rw.Property = Property;
+                            Rw.Value = Value;
+                            ListData.Add(Rw);
+                        }
+                        catch
+                        {
+                            Value = "Error!!";
+                            Property = "Manufacturer";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
                             Rw.IsWMISuccess = true;
@@ -772,6 +1005,36 @@ namespace HarvestDataService
 
         }
 
+        private List<AD_HarvesterResult> GetAllMachineWarrantyData(DataTable dt)
+        {
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
+            try
+            {
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    AD_HarvesterResult allMachinePingData = new AD_HarvesterResult();
+
+                    string WRdate = GetWarrantyDate(dt.Rows[i]["Action"].ToString());
+
+                    //log.PushLog("PingAsset : " + dt.Rows[i]["Item"].ToString() + " Status " + pingStatus.ToString(), " ");
+
+                    allMachinePingData.Property = "WarrantyDate";
+                    allMachinePingData.Value = WRdate;
+                    allMachinePingData.Item = dt.Rows[i]["Item"].ToString();
+                    ListData.Add(allMachinePingData);
+
+                }
+                return ListData;
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("Harvest GetAllMachinePingData:" + ex.Message + ex.InnerException, "GetAllMachinePingData");
+                return ListData;
+            }
+        }
+
+
+
         private  bool GetPingStatus(string machineName)
         {
             try {
@@ -792,6 +1055,96 @@ namespace HarvestDataService
             }
     
         }
+
+        private string GetWarrantyDate(string Action)
+        {
+            string WRDate = "";
+            try
+            {
+                string[] Info = Action.Split('|');
+
+                string company = Info[0];
+                string sn = Info[1];
+                string pn = Info[2];
+
+
+                if (company == "HP") { 
+                
+                
+                }
+
+                return WRDate;
+            }
+            catch
+            {
+                return WRDate;
+            }
+
+        }
+
+        #region SeleniumWr
+
+        public static string GetHpwaraty(string sn, string pn)
+        {
+
+            string expDate = "";
+
+
+            // Create a new instance of the ChromeDriver
+            IWebDriver driver = new ChromeDriver();
+
+            IDevTools devTools = driver as IDevTools;
+            var session = devTools.GetDevToolsSession();
+            var network = session.Domains.Network;
+
+            network.EnableNetwork();
+            network.EnableNetworkCaching();
+
+
+            // Navigate to the website you want to scrape
+            driver.Navigate().GoToUrl("https://support.hp.com/gb-en/check-warranty");
+
+            Thread.Sleep(15000);
+
+            IWebElement inputFieldSM = driver.FindElement(By.XPath("//*[@id=\"inputtextpfinder\"]"));
+
+            // Enter text into the input field
+            inputFieldSM.SendKeys(sn);
+
+
+
+            IWebElement submitButton = driver.FindElement(By.XPath("//*[@id=\"FindMyProduct\"]"));
+
+            // Submit the form
+            submitButton.Submit();
+
+            int i = 1;
+            while (i <= 10)
+            {
+
+                try
+                {
+                    Thread.Sleep(1000);
+                    IWebElement inputFieldPN = driver.FindElement(By.XPath("/html/body/app-root/div/app-layout/app-check-warranty/div/div/div[2]/app-check-warranty-landing/div[2]/app-single-product/div/form/div/div[3]/input"));
+                    inputFieldPN.SendKeys(pn);
+                    break;
+                }
+                catch { }
+
+
+                i++;
+            }
+            //// Submit the form
+            submitButton.Submit();
+
+            // Close the browser window and quit the driver
+            // driver.Quit();
+
+            return expDate;
+        }
+
+
+        #endregion
 
         private DataRow GetHDSize(string machineName, string harvestID, DataRow data)
         {
