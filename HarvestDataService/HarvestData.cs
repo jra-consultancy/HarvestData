@@ -28,6 +28,7 @@ using HarvestDataService.Service;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
+using OpenQA.Selenium.Support.UI;
 
 namespace HarvestDataService
 {
@@ -46,7 +47,7 @@ namespace HarvestDataService
 
         private bool IsWarrantyAssetRun = false;
 
-        private bool isDevMode = true;
+        private bool isDevMode = false;
 
         public HarvestData()
         {
@@ -58,6 +59,9 @@ namespace HarvestDataService
             //log.PushLog("Komang Here", "TesLog");
         }
         private static readonly object Mylock = new object();
+
+        #region Method to call in service 
+        
         public void Harvest(object sender, System.Timers.ElapsedEventArgs e)
         {
             if (!Monitor.TryEnter(Mylock, 0)) return;
@@ -142,13 +146,15 @@ namespace HarvestDataService
      
         }
 
+        #endregion
 
         /// <summary>
         ///  add by komang
         /// </summary>
-        public void PingAsset() {
 
-        
+        #region Controler Method
+       
+        public void PingAsset() {
 
             DateTime now = DateTime.Now;
             //if (now.Minute > 10 && now.Minute <= 15)
@@ -236,7 +242,8 @@ namespace HarvestDataService
             try
             {
                 IsWarrantyAssetRun = true;
-                ExecuteWarranty(type = "WARR", now.Hour + 1);
+                ///komang aranty have bug ill be fix
+                //ExecuteWarranty(type = "Warranty", now.Hour + 1);
 
                 IsWarrantyAssetRun = false;
             }
@@ -263,6 +270,9 @@ namespace HarvestDataService
             }
 
         }
+        
+        #endregion
+
 
         private string GetServiceVersion(string serviceName)
         {
@@ -330,8 +340,8 @@ namespace HarvestDataService
                 
                 //_logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                 log.PushLog("Harvest GetComputerADData: Domain Path is " + domainPath, "");
-
-                string searchFilter = "(&(objectCategory=computer))";
+                DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);
+                string searchFilter = "(&(objectCategory=computer)(|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + ")))";
                 try
                     {
                         DirectoryEntry entry = new DirectoryEntry(domainPath);
@@ -377,7 +387,17 @@ namespace HarvestDataService
                                 asset.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
                                 asset.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
                                 asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
-                                asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
+                                //asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
+
+                                if (result.Properties["userAccountControl"].Count > 0) {
+                                    int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                                    int AccountDisabled = 0x0002;
+                                    asset.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
+                                }
+                                else {
+                                    asset.Enabled = false;
+                                }
+
                                 asset.EduDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
                                 asset.IPv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
                                 asset.IPv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
@@ -404,6 +424,7 @@ namespace HarvestDataService
                                 }
                                 catch { asset.ObjectGUID = ""; }
 
+                                asset.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
                                 asset.DistinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
                                 asset.OperatingSystemServicePack = result.Properties["operatingSystemServicePack"].Count > 0 ? result.Properties["operatingSystemServicePack"][0].ToString() : "";
                                 asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
@@ -493,8 +514,9 @@ namespace HarvestDataService
                 //_logger.Log("Harvest GetUserADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
                 log.PushLog("Harvest GetUserADData: Domain Path is " + domainPath, "");
-
-                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain))";
+                
+                DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);//(whenChanged>="+thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z")+") (|(userAccountControl:1.2.840.113556.1.4.803:=2)(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + "))
+                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain)(|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + ")))";
                     try
                     {
                         DirectoryEntry entry = new DirectoryEntry(domainPath);
@@ -545,8 +567,20 @@ namespace HarvestDataService
                                 user.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
                                 user.EmailAddress = result.Properties["mail"].Count > 0 ? result.Properties["mail"][0].ToString() : "";
                                 user.EmployeeID = result.Properties["employeeID"].Count > 0 ? result.Properties["employeeID"][0].ToString() : "";
-                                user.Enabled = result.Properties["enabled"].Count > 0 ? Convert.ToInt64(result.Properties["enabled"][0]) != 0 : false;
-                                user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
+                                //user.Enabled = result.Properties["enabled"].Count > 0 ? Convert.ToInt64(result.Properties["enabled"][0]) != 0 : false;
+
+                                if (result.Properties["userAccountControl"].Count > 0)
+                                {
+                                    int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                                    int AccountDisabled = 0x0002;
+                                    user.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
+                                }
+                                else
+                                {
+                                    user.Enabled = false;
+                                }
+
+                            user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
                                 user.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
                                 user.mailNickname = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
                                 user.manager = result.Properties["manager"].Count > 0 ? result.Properties["manager"][0].ToString() : "";
@@ -681,14 +715,30 @@ namespace HarvestDataService
             {
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
+                    string Item = dt.Rows[i]["Item"].ToString();
                     AD_HarvesterResult allMachinePingData = new AD_HarvesterResult();
 
-                    bool pingStatus =  GetPingStatus(dt.Rows[i]["Item"].ToString());
+                    //bool pingStatus =  GetPingStatus(dt.Rows[i]["Item"].ToString());
 
+                    string IpAddess = GetIpAddress(Item);
                     //log.PushLog("PingAsset : " + dt.Rows[i]["Item"].ToString() + " Status " + pingStatus.ToString(), " ");
 
-                    allMachinePingData.IsPingSuccess = pingStatus;
-                    allMachinePingData.Item = dt.Rows[i]["Item"].ToString();
+                    // do WMI while get IpAddres or ping success
+                    if (IpAddess != "TimeOut")
+                    {
+                        allMachinePingData.IsPingSuccess = true;
+                        allMachinePingData.Property = "IpAddress";
+                        allMachinePingData.Value = IpAddess;
+
+                        List<AD_HarvesterResult> ListResultWMIDataDetail = new List<AD_HarvesterResult>();
+                        ListResultWMIDataDetail = GetMachineWmiDataByItemId(Item);
+                        ListData.AddRange(ListResultWMIDataDetail);
+                    }
+                    else {
+                        allMachinePingData.IsPingSuccess = false;
+                    }
+
+                    allMachinePingData.Item = Item;
                     ListData.Add(allMachinePingData);
 
                 }
@@ -711,16 +761,38 @@ namespace HarvestDataService
                     .Select(g => g.OrderBy(r => r["Item"]).First())
                 .CopyToDataTable();
 
-                //string Username = _iArmRepo.GetGlobalProperties("DAUsername");
-                //string Password = _iArmRepo.GetGlobalProperties("DAPassword");
-
-
 
                 foreach (DataRow drItem in dtItem.Rows) {
 
                     string Item = drItem["Item"].ToString();
-                    try {
+                    List<AD_HarvesterResult> ListResultDataDetail = new List<AD_HarvesterResult>();
+                    ListResultDataDetail = GetMachineWmiDataByItemId(Item);
+                    ListData.AddRange(ListResultDataDetail);
 
+                }
+
+                return ListData;
+            }
+            catch (Exception ex)
+            {
+                log.PushLog("Harvest GetAllMachineWmiData:" + ex.Message + ex.InnerException, "GetAllMachineWmiData");
+
+                throw ex;
+            }
+
+        }
+
+
+        private List<AD_HarvesterResult> GetMachineWmiDataByItemId(string Item)
+        {
+            List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
+            try
+            {
+                    //string Username = _iArmRepo.GetGlobalProperties("DAUsername");
+                    //string Password = _iArmRepo.GetGlobalProperties("DAPassword");
+
+                    try
+                    {
                         string connectingMachineName = "\\\\" + Item + "\\root\\cimv2";
                         ConnectionOptions options = new ConnectionOptions();
 
@@ -731,20 +803,17 @@ namespace HarvestDataService
 
                         //options.Username = "general.cp"; // replace with the actual username
                         //options.Password = "AdIns2017"; //  for test only 
-                        
+
                         ManagementScope scope = new ManagementScope(connectingMachineName, options);
                         scope.Connect();
 
                         string Value = "";
                         string Property = "";
-
                         string sAction = "";
-                        //ObjectQuery query;
-                        //ManagementObjectSearcher searcher;
 
+                        try
+                        {
 
-                        try {
-                            
                             Value = "";
                             Property = "";
 
@@ -764,14 +833,15 @@ namespace HarvestDataService
                             Rw.Value = Value;
                             ListData.Add(Rw);
 
-                        } 
-                        catch {
+                        }
+                        catch
+                        {
 
                             Value = "Error!!";
                             Property = "SerialNumber";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -799,13 +869,14 @@ namespace HarvestDataService
                             ListData.Add(Rw);
 
                         }
-                        catch {
+                        catch
+                        {
 
                             Value = "Error!!";
                             Property = "SystemSKUNumber";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -834,13 +905,14 @@ namespace HarvestDataService
                             Rw.Value = Value;
                             ListData.Add(Rw);
                         }
-                        catch {
+                        catch
+                        {
 
                             Value = "Error!!";
                             Property = "BIOS";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -872,13 +944,14 @@ namespace HarvestDataService
                             ListData.Add(Rw);
 
                         }
-                        catch {
+                        catch
+                        {
 
                             Value = "Error!!";
                             Property = "ChassisTypes";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -906,12 +979,13 @@ namespace HarvestDataService
                             Rw.Value = Value;
                             ListData.Add(Rw);
                         }
-                        catch {
+                        catch
+                        {
                             Value = "Error!!";
                             Property = "PhysicalMemory";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -947,7 +1021,7 @@ namespace HarvestDataService
                             Property = "DiskDrive";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
@@ -981,18 +1055,18 @@ namespace HarvestDataService
                             Property = "Manufacturer";
 
                             AD_HarvesterResult Rw = new AD_HarvesterResult();
-                            Rw.IsWMISuccess = true;
+                            Rw.IsWMISuccess = false;
                             Rw.Item = Item;
                             Rw.Property = Property;
                             Rw.Value = Value;
                             ListData.Add(Rw);
 
                         }
-                    } catch { 
-                    
                     }
+                    catch
+                    {
 
-                }
+                    }
 
                 return ListData;
             }
@@ -1010,11 +1084,33 @@ namespace HarvestDataService
             List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
             try
             {
+                var options = new ChromeOptions();
+                options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36");
+
+                IWebDriver driver = new ChromeDriver(options);
+
+                IDevTools devTools = driver as IDevTools;
+                var session = devTools.GetDevToolsSession();
+                var network = session.Domains.Network;
+
+                network.EnableNetwork();
+                network.EnableNetworkCaching();
+
+                // warm_up Dell
+                driver.Navigate().GoToUrl("https://www.dell.com/support/home/en-id?app=warranty");
+                IWebElement inputFieldSM1 = driver.FindElement(By.XPath("//*[@id=\"inpEntrySelection\"]"));
+                inputFieldSM1.SendKeys("JW76D2W");
+                IWebElement submitButton1 = driver.FindElement(By.XPath("//*[@id=\"btn-entry-select\"]"));
+                submitButton1.Click();
+                inputFieldSM1.Clear();
+
+                Thread.Sleep(30000);
+
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
                     AD_HarvesterResult allMachinePingData = new AD_HarvesterResult();
 
-                    string WRdate = GetWarrantyDate(dt.Rows[i]["Action"].ToString());
+                    string WRdate = GetWarrantyDate(dt.Rows[i]["Action"].ToString(), driver);
 
                     //log.PushLog("PingAsset : " + dt.Rows[i]["Item"].ToString() + " Status " + pingStatus.ToString(), " ");
 
@@ -1040,7 +1136,7 @@ namespace HarvestDataService
             try {
                 Ping pingSender = new Ping();
                 PingReply reply = pingSender.Send(machineName);
-
+                
                 if (reply.Status == IPStatus.Success)
                 {
                     return true;
@@ -1055,8 +1151,33 @@ namespace HarvestDataService
             }
     
         }
+        private string GetIpAddress(string machineName)
+        {
+            string IpAddres = "TimeOut";
+            try
+            {
+                Ping pingSender = new Ping();
+                PingReply reply = pingSender.Send(machineName);
 
-        private string GetWarrantyDate(string Action)
+                
+                if (reply.Status == IPStatus.Success)
+                {
+                    IpAddres = reply.Address.ToString();
+                    return IpAddres;
+                }
+                else
+                {
+                    return IpAddres;
+                }
+            }
+            catch
+            {
+                return IpAddres;
+            }
+
+        }
+
+        private string GetWarrantyDate(string Action, IWebDriver driver)
         {
             string WRDate = "";
             try
@@ -1068,9 +1189,15 @@ namespace HarvestDataService
                 string pn = Info[2];
 
 
-                if (company == "HP") { 
-                
-                
+                if (company == "HP") {
+                    WRDate = GetHpwaratyhp(sn, driver);
+
+                } else if (company == "DEL") {
+                    WRDate = GetHpwaratyDell(sn, driver);
+                }
+                else if (company == "LENOVO")
+                {
+                    WRDate = GetHpwaratyLenovo(sn, driver);
                 }
 
                 return WRDate;
@@ -1082,67 +1209,137 @@ namespace HarvestDataService
 
         }
 
-        #region SeleniumWr
-
-        public static string GetHpwaraty(string sn, string pn)
+        #region Selenium Wr
+        public static string GetHpwaratyhp(string sn, IWebDriver driver)
         {
-
             string expDate = "";
 
-
-            // Create a new instance of the ChromeDriver
-            IWebDriver driver = new ChromeDriver();
-
-            IDevTools devTools = driver as IDevTools;
-            var session = devTools.GetDevToolsSession();
-            var network = session.Domains.Network;
-
-            network.EnableNetwork();
-            network.EnableNetworkCaching();
-
-
-            // Navigate to the website you want to scrape
             driver.Navigate().GoToUrl("https://support.hp.com/gb-en/check-warranty");
-
-            Thread.Sleep(15000);
 
             IWebElement inputFieldSM = driver.FindElement(By.XPath("//*[@id=\"inputtextpfinder\"]"));
 
             // Enter text into the input field
             inputFieldSM.SendKeys(sn);
 
-
-
             IWebElement submitButton = driver.FindElement(By.XPath("//*[@id=\"FindMyProduct\"]"));
 
             // Submit the form
             submitButton.Submit();
 
-            int i = 1;
-            while (i <= 10)
+            for (int i = 0; i < 10; i++)
             {
+                string CurrentUrl = driver.Url;
 
                 try
                 {
-                    Thread.Sleep(1000);
-                    IWebElement inputFieldPN = driver.FindElement(By.XPath("/html/body/app-root/div/app-layout/app-check-warranty/div/div/div[2]/app-check-warranty-landing/div[2]/app-single-product/div/form/div/div[3]/input"));
-                    inputFieldPN.SendKeys(pn);
-                    break;
+
+                    if (CurrentUrl.Contains("warrantyresult"))
+                    {
+                        IWebElement WDateElement = driver.FindElement(By.XPath("//*[@id=\"directionTracker\"]/app-layout/app-check-warranty/div/div/div[2]/app-warranty-details/div/div[2]/main/div[4]/div/div[2]/div/div/div[2]/div[5]/div[2]"));
+                        expDate = WDateElement.Text;
+
+                        string format = "MMMM d, yyyy";
+                        CultureInfo provider = CultureInfo.InvariantCulture;
+
+                        DateTime result = DateTime.ParseExact(expDate, format, provider);
+                        expDate = result.ToString("yyyy-MM-dd");
+                        
+                        Console.WriteLine("expDate " + expDate);
+                        break;
+                    }
+                    else
+                    {
+                        IWebElement ErrSN = driver.FindElement(By.XPath("//*[@id=\"directionTracker\"]/app-layout/app-check-warranty/div/div/div[2]/app-check-warranty-landing/div[2]/app-single-product/div/form/div/div[1]/p[1]"));
+                        if (ErrSN.Displayed)
+                        {
+                            Console.WriteLine("sn Invalid " + sn);
+                            break;
+                        }
+                    }
+
                 }
                 catch { }
-
-
-                i++;
+                Thread.Sleep(1000);
             }
-            //// Submit the form
-            submitButton.Submit();
-
-            // Close the browser window and quit the driver
-            // driver.Quit();
 
             return expDate;
         }
 
+        public static string GetHpwaratyDell(string sn, IWebDriver driver)
+        {
+            string expDate = "";
+            
+            driver.Navigate().GoToUrl("https://www.dell.com/support/home/en-id?app=warranty");
+
+            IWebElement inputFieldSM = driver.FindElement(By.XPath("//*[@id=\"inpEntrySelection\"]"));
+            
+            inputFieldSM.SendKeys(sn);
+            
+            IWebElement submitButton = driver.FindElement(By.XPath("//*[@id=\"btn-entry-select\"]"));
+            
+            submitButton.Click();
+
+            for (int i = 0; i < 10; i++)
+            {
+                string CurrentUrl = driver.Url;
+
+                try
+                {
+
+                    if (CurrentUrl.Contains("product-support/servicetag"))
+                    {
+                        IWebElement WDateElement = driver.FindElement(By.XPath("//*[@id=\"dsk-expirationDt\"]"));
+                        expDate = WDateElement.Text;
+
+                        string format = "dd MMM yyyy";
+                        CultureInfo provider = CultureInfo.InvariantCulture;
+
+                        DateTime result = DateTime.ParseExact(expDate, format, provider);
+                        expDate = result.ToString("yyyy-MM-dd");
+                        Console.WriteLine("expDate " + expDate);
+                        break;
+                    }
+                    else
+                    {
+                        IWebElement ErrSN = driver.FindElement(By.XPath("//*[@id=\"divEntryError\"]"));
+                        
+                        if (ErrSN.Displayed)
+                        {
+                            Console.WriteLine("sn Invalid " + sn);
+                            break;
+                        }
+                    }
+
+                }
+                catch { }
+
+                Thread.Sleep(1000);
+            }
+
+            return expDate;
+        }
+
+        public static string GetHpwaratyLenovo(string sn, IWebDriver driver)
+        {
+            string expDate = "";
+
+       
+            driver.Navigate().GoToUrl("https://pcsupport.lenovo.com/id/id/warranty-lookup#/");
+            IWebElement inputFieldSM = driver.FindElement(By.XPath("//*[@id=\"app-standalone-warrantylookup\"]/div[1]/div[2]/div/div/div[1]/div[1]/div[1]/div[1]/input"));
+            inputFieldSM.SendKeys(sn);
+            IWebElement submitButton = driver.FindElement(By.XPath("//*[@id=\"app-standalone-warrantylookup\"]/div[1]/div[2]/div/div/div[1]/button"));
+
+            // Submit the form
+            submitButton.Submit();
+
+            for (int i = 0; i < 10; i++)
+            {
+                string CurrentUrl = driver.Url;
+                Console.WriteLine("url " + CurrentUrl);
+                Thread.Sleep(1000);
+            }
+            return expDate;
+        }
 
         #endregion
 

@@ -11,12 +11,14 @@ BEGIN
 	IF(@Type = 'Warranty')
 	BEGIN 
 	SELECT A.Item,
-	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='Manufacturer'),'-')+'|'+
-	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='SerialNumber'),'-')+'|'+
-	ISNULL((SELECT TOP 1 B.Value FROM dbo.A_HarvesterResults B WITH(NOLOCK) WHERE Item = A.Item  AND B.Property ='SystemSKUNumber'),'-')
+	ISNULL(b.Make,'-')+'|'+
+	ISNULL(b.SerialNumber,'-')+'|'+
+	ISNULL(b.AssetTag,'-')
 	AS Action  
 	FROM dbo.A_Harvester A WITH(NOLOCK)
-	WHERE A.Action = @Type AND A.[Count]>0 AND @Cadence%A.Cadence = 0 GROUP BY A.Item,Action ORDER BY Item;
+	JOIN dbo.Asset b WITH(NOLOCK) ON a.Item = b.AssetID
+	WHERE A.Action = @Type AND A.[Count]>0 AND @Cadence%A.Cadence = 0 GROUP BY  ISNULL(b.Make, '-') + '|' + ISNULL(b.SerialNumber, '-') + '|' + ISNULL(b.AssetTag, '-'),
+                                                                                A.Item ORDER BY Item;
 	END
 	ELSE
 	BEGIN 

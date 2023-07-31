@@ -106,3 +106,9 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\log4net.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\log4net.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.exe.manifest
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.application
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\selenium-manager\linux\selenium-manager
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\selenium-manager\macos\selenium-manager
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\selenium-manager\windows\selenium-manager.exe
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.Support.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\chromedriver.exe

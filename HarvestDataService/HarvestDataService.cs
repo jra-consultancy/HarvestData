@@ -24,6 +24,7 @@ namespace HarvestDataService
         readonly System.Timers.Timer _timerPing = new System.Timers.Timer();
         readonly System.Timers.Timer _timerPingReset = new System.Timers.Timer();
         readonly System.Timers.Timer _timerWMI = new System.Timers.Timer();
+        readonly System.Timers.Timer _timerWarranty = new System.Timers.Timer();
 
         Logger4net log;
 
@@ -81,9 +82,10 @@ namespace HarvestDataService
             _timer.Elapsed += (sender, e) => (new HarvestData()).Harvest();
             //_timer.Elapsed += (new HarvestData()).Harvest;
 
+
             int intInterval = Convert.ToInt32(1);
             log.PushLog("_timerPing Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
-            // Set up the timer to run at the scheduled time every 24 hours
+            // Set up the timer to run at the scheduled time every 1 Minut
             _timerPing.AutoReset = true;
             _timerPing.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
             _timerPing.Enabled = true;
@@ -94,13 +96,21 @@ namespace HarvestDataService
 
             Thread.Sleep(10000);
             log.PushLog("_timerWMI Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
-            // Set up the timer to run at the scheduled time every 24 hours
+            // Set up the timer to run at the scheduled time every  1 Minut
             _timerWMI.AutoReset = true;
             _timerWMI.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
             _timerWMI.Enabled = true;
             _timerWMI.Elapsed += (sender2, e2) => harv.WMIAssetAsync(sender2, e2);
             _timerWMI.Start();
 
+            Thread.Sleep(10000);
+            log.PushLog("_timerWarranty Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
+            // Set up the timer to run at the scheduled time every  1 Minut
+            _timerWarranty.AutoReset = true;
+            _timerWarranty.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
+            _timerWarranty.Enabled = true;
+            _timerWarranty.Elapsed += (sender3, e3) => harv.WarrantyAssetAsync(sender3, e3);
+            _timerWarranty.Start();
 
 
             log.PushLog("Service Running", "");
@@ -112,6 +122,8 @@ namespace HarvestDataService
             _timer.Enabled = false;
             _timerPing.Enabled = false;
             _timerWMI.Enabled = false;
+            _timerWarranty.Enabled = false;
+            _timerWarranty.Stop();
             _timerWMI.Stop();
             _timer.Stop();
             _timerPing.Stop();

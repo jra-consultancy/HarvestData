@@ -11,39 +11,50 @@ BEGIN
 IF(@Type='Ping')
 BEGIN 
 
-
-UPDATE a SET Heartbeat = GETDATE() FROM dbo.Asset a
+-- update Heartbeat and IP addrees
+UPDATE a SET Heartbeat = GETDATE(),ip = b.Value FROM dbo.Asset a
 JOIN @Data b ON a.AssetID = b.Item 
-WHERE (b.IsPingSuccess = 1)
+WHERE (b.IsPingSuccess = 1) AND b.Property = 'IpAddress';
 
-INSERT INTO dbo.A_Harvester
+-- update serialnumber if IsWMISuccess = 1
+UPDATE a SET a.SerialNumber = b.Value FROM dbo.Asset a
+JOIN @Data b ON a.AssetID = b.Item 
+WHERE (b.IsWMISuccess = 1) AND b.Property = 'SerialNumber';
+
+-- update Make (HP, DELL, Lenovo, etc) if IsWMISuccess = 1
+UPDATE a SET a.Make = b.Value FROM dbo.Asset a
+JOIN @Data b ON a.AssetID = b.Item 
+WHERE (b.IsWMISuccess = 1) AND b.Property = 'Manufacturer';
+
+
+-- insert to A_HarvesterResults for logging , and because after we have success ping we do WMI query
+INSERT INTO dbo.A_HarvesterResults
 (
     Item,
-    Type,
-    Action,
-    Count,
-    Cadence,
-    DtCreate
+    Property,
+    Value,
+    CreateDate
 )
 SELECT 
-	a.Item,    -- Item - nvarchar(550)
-    'Asset',    -- Type - varchar(100)
-    'WMI',    -- Action - varchar(100)
-    a.Count, -- Count - int
-    a.Cadence, -- Cadence - int
-    GETDATE()     -- DtCreate - datetime
-FROM dbo.A_Harvester a
-JOIN @Data b ON a.Item = b.Item 
-WHERE (b.IsPingSuccess = 1 AND a.Action = @Type)
+	a.Item,
+    a.Property,
+    a.Value,
+    GETDATE()
+ FROM @Data a
+ LEFT JOIN A_HarvesterResults b ON b.Item = a.Item AND b.Property = a.Property
+ WHERE (a.IsWMISuccess = 1 OR a.IsPingSuccess = 1) AND b.HarvesterResultId IS NULL;
 
-
+  
+-- delete job in A_Harvester Action ping if IsPingSuccess = 1
 DELETE a FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
 WHERE (b.IsPingSuccess = 1 AND a.Action = @Type)
 
+
+-- if IsPingSuccess = 0 update count for cheking next loop
 UPDATE a SET a.Count = a.Count - 1 FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
-WHERE a.Action = @Type
+WHERE (b.IsPingSuccess = 0 AND a.Action = @Type)
 
 END
 ELSE IF (@Type='WMI')
@@ -65,30 +76,17 @@ SELECT
  LEFT JOIN A_HarvesterResults b ON b.Item = a.Item AND b.Property = a.Property
  WHERE a.IsWMISuccess = 1 AND b.HarvesterResultId IS NULL
 
-INSERT INTO dbo.A_Harvester
-(
-    Item,
-    Type,
-    Action,
-    Count,
-    Cadence,
-    DtCreate
-)
-SELECT 
-c.Item,
-d.Type AS Type,
-'Warranty'AS  Action,
-MAX(d.Count) AS Count,
-MAX(d.Cadence) AS Cadence,
-GETDATE() AS DtCreate
- FROM (
-SELECT a.Item
-FROM (SELECT Item FROM @Data WHERE IsWMISuccess = 1  GROUP BY Item) a
-) c 
-JOIN dbo.A_Harvester d ON d.Item = c.Item 
-WHERE d.Action = 'WMI'
-GROUP BY c.Item,
-         d.Type
+
+-- update serialnumber if IsWMISuccess = 1
+UPDATE a SET a.SerialNumber = b.Value FROM dbo.Asset a
+JOIN @Data b ON a.AssetID = b.Item 
+WHERE (b.IsWMISuccess = 1) AND b.Property = 'SerialNumber';
+
+-- update Make (HP, DELL, Lenovo, etc) if IsWMISuccess = 1
+UPDATE a SET a.Make = b.Value FROM dbo.Asset a
+JOIN @Data b ON a.AssetID = b.Item 
+WHERE (b.IsWMISuccess = 1) AND b.Property = 'Manufacturer';
+
 
 DELETE a FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
@@ -96,12 +94,27 @@ WHERE (b.IsWMISuccess = 1 AND a.Action = 'WMI')
 
 UPDATE a SET a.Count = a.Count - 1 FROM dbo.A_Harvester a
 JOIN @Data b ON a.Item = b.Item 
-WHERE a.Action <> 'Ping'
+WHERE a.Action = 'WMI'
 
 END 
-ELSE
+ELSE IF (@Type='Warranty')
 BEGIN 
-SELECT * FROM dbo.A_Harvester
+
+-- update WarrantyDate if we gat waranty date
+UPDATE a SET a.WarrantyDate = b.Value FROM dbo.Asset a
+JOIN @Data b ON a.AssetID = b.Item 
+WHERE b.Property = 'WarrantyDate' AND b.Value IS NOT NULL AND  b.Value <> '';
+
+-- Delete  A_Harvester if we gat waranty date
+DELETE a FROM dbo.A_Harvester a
+JOIN @Data b ON a.Item = b.Item 
+WHERE  a.Action = 'Warranty' AND b.Property = 'WarrantyDate' AND b.Value IS NOT NULL AND  b.Value <> '';
+
+-- Updaete count if fail to get waranty date
+UPDATE a SET a.Count = a.Count - 1 FROM dbo.A_Harvester a
+JOIN @Data b ON a.Item = b.Item 
+WHERE a.Action = 'Warranty' AND b.Property = 'WarrantyDate' AND (b.Value IS NULL OR b.Value <> '');
+
 END 
 
 END

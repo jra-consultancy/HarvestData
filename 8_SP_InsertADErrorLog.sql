@@ -19,5 +19,3 @@ VALUES
     );
 END
 
-EXEC dbo.SP_InsertADErrorLog @ErrorMsg = N'', -- nvarchar(max)
-                             @Event = N''     -- nvarchar(255)
