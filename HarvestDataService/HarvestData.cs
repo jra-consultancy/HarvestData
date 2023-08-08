@@ -283,6 +283,7 @@ namespace HarvestDataService
             return serviceVersion.ToString();
         }
 
+        #region AD
         private void ExecuteADData()
         {
             List<Asset> assets = GetComputerADData();
@@ -306,6 +307,7 @@ namespace HarvestDataService
             {
                 string tempDomainValue = "";
                 List<Asset> assets = new List<Asset>();
+                List<string> LDomain = new List<string>();
 
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = "";
@@ -319,30 +321,56 @@ namespace HarvestDataService
 
                 if (String.IsNullOrEmpty(strDNSDomain))
                 {
-                    strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
-                   
+                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    //strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
+
                     _iArmRepo.InsertAD_DomainName(strDNSDomain);
-                   
+
                     // komang 04-23-2023 get root domain for full path AD
-                    PathAD = "LDAP://" + RootDomain.Name + "/" + strDNSDomain;
-                    strDNSDomain = PathAD;
+                    //PathAD = "LDAP://" + RootDomain.Name + "/" + strDNSDomain;
+                    //strDNSDomain = PathAD;
+
+                    LDomain.Add(strDNSDomain);
+                }
+                else {
+                    LDomain.Add(strDNSDomain);
+                    //LDomain = SplitDomain(strDNSDomain);
                 }
 
-                if (strDNSDomain.Contains("LDAP://"))
-                {
-                    domainPath = strDNSDomain;
-                }
-                else
-                {
-                    domainPath = "LDAP://" + strDNSDomain;
+                //if (strDNSDomain.Contains("LDAP://"))
+                //{
+                //    domainPath = strDNSDomain;
+                //}
+                //else
+                //{
+                //    domainPath = "LDAP://" + strDNSDomain;
 
-                }
+                //}
+
+                //_logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy"))) // (|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + "));
                 
-                //_logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-                log.PushLog("Harvest GetComputerADData: Domain Path is " + domainPath, "");
                 DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);
-                string searchFilter = "(&(objectCategory=computer)(|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + ")))";
-                try
+                string searchFilter = "(&(objectCategory=computer)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+
+                foreach (string DomainName in LDomain) {
+
+                    if (DomainName == null || DomainName == "")
+                    {
+                        continue;
+                    }
+
+                    if (DomainName.Contains("LDAP://"))
+                    {
+                        domainPath = DomainName;
+                    }
+                    else
+                    {
+                        domainPath = "LDAP://" + DomainName;
+                    }
+
+                    log.PushLog("Harvest GetComputerADData: Domain Path is " + domainPath, "");
+
+                    try
                     {
                         DirectoryEntry entry = new DirectoryEntry(domainPath);
                         DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter);
@@ -367,14 +395,14 @@ namespace HarvestDataService
                         //_logger.Log("Harvest GetComputerADData: Records found: " + totalRecords, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                         log.PushLog("Harvest GetComputerADData: Records found: " + totalRecords, "");
 
-                    while (count < totalRecords)
+                        while (count < totalRecords)
                         {
                             results = searcher.FindAll();
                             if (results == null || results.Count == 0)
                             {
                                 //_logger.Log("Harvest GetComputerADData: No Result Found ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                                 log.PushLog("Harvest GetComputerADData: No Result Found ", "");
-                                 break;
+                                break;
                             }
 
                             //_logger.Log("Harvest GetComputerADData: Connection Established ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
@@ -389,12 +417,14 @@ namespace HarvestDataService
                                 asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
                                 //asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
 
-                                if (result.Properties["userAccountControl"].Count > 0) {
+                                if (result.Properties["userAccountControl"].Count > 0)
+                                {
                                     int userAccountControl = (int)result.Properties["userAccountControl"][0];
                                     int AccountDisabled = 0x0002;
                                     asset.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
                                 }
-                                else {
+                                else
+                                {
                                     asset.Enabled = false;
                                 }
 
@@ -414,13 +444,16 @@ namespace HarvestDataService
 
                                 try
                                 {
-                                if (result.Properties["objectGUID"].Count > 0) {
+                                    if (result.Properties["objectGUID"].Count > 0)
+                                    {
 
-                                    byte[] objbuf = (byte[])result.Properties["objectGUID"][0];
-                                    asset.ObjectGUID = new Guid(objbuf).ToString();
-                                } else {
-                                    asset.ObjectGUID = "";
-                                }
+                                        byte[] objbuf = (byte[])result.Properties["objectGUID"][0];
+                                        asset.ObjectGUID = new Guid(objbuf).ToString();
+                                    }
+                                    else
+                                    {
+                                        asset.ObjectGUID = "";
+                                    }
                                 }
                                 catch { asset.ObjectGUID = ""; }
 
@@ -456,12 +489,14 @@ namespace HarvestDataService
                         searcher.Dispose();
                         entry.Dispose();
                     }
-                    catch (DirectoryServicesCOMException asc )
+                    catch (DirectoryServicesCOMException asc)
                     {
                         //_logger.Log("Harvest GetComputerADData: Domain Path is Invalid" + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
-                        log.PushLog("Harvest GetComputerADData: Domain Path is Invalid " + domainPath +" "+ asc.Message + asc.InnerException, "GetComputerADData");
+                        log.PushLog("Harvest GetComputerADData: Domain Path is Invalid " + domainPath + " " + asc.Message + asc.InnerException, "GetComputerADData");
 
                     }
+
+                }
 
                 return assets;
             }
@@ -478,8 +513,10 @@ namespace HarvestDataService
         {
             try
             {
-
                 List<User> users = new List<User>();
+                
+                List<string> LDomain = new List<string>();
+
                 DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
                 string strDNSDomain = "";
                 string domainPath = "";
@@ -492,31 +529,46 @@ namespace HarvestDataService
 
                 if (String.IsNullOrEmpty(strDNSDomain))
                 {
-                    //strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
-                    strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
+                    strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+
+                    //strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
 
                     // komang 04-23-2023 get root domain for full path AD
-                    PathAD = "LDAP://" + RootDomain.Name + "/" + strDNSDomain;
-                    strDNSDomain = PathAD;
+                    //PathAD = "LDAP://" + RootDomain.Name + "/" + strDNSDomain;
+                    //strDNSDomain = PathAD;
 
+                    LDomain.Add(strDNSDomain);
                 }
+                else {
 
+                    LDomain.Add(strDNSDomain);
 
-                if (strDNSDomain.Contains("LDAP://"))
-                {
-                    domainPath = strDNSDomain;
-                }
-                else
-                {
-                    domainPath = "LDAP://" + strDNSDomain;
+                    //LDomain = SplitDomain(strDNSDomain);
                 }
 
                 //_logger.Log("Harvest GetUserADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
 
-                log.PushLog("Harvest GetUserADData: Domain Path is " + domainPath, "");
+                
                 
                 DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);//(whenChanged>="+thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z")+") (|(userAccountControl:1.2.840.113556.1.4.803:=2)(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + "))
-                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain)(|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + ")))";
+                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+
+                foreach (string DomainName in LDomain) {
+
+                    if (DomainName == null || DomainName == "") {
+                        continue;
+                    }
+
+                    if (DomainName.Contains("LDAP://"))
+                    {
+                        domainPath = DomainName;
+                    }
+                    else
+                    {
+                        domainPath = "LDAP://" + DomainName;
+                    }
+
+                    log.PushLog("Harvest GetUserADData: Domain Path is " + domainPath, "");
                     try
                     {
                         DirectoryEntry entry = new DirectoryEntry(domainPath);
@@ -580,7 +632,7 @@ namespace HarvestDataService
                                     user.Enabled = false;
                                 }
 
-                            user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
+                                user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
                                 user.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
                                 user.mailNickname = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
                                 user.manager = result.Properties["manager"].Count > 0 ? result.Properties["manager"][0].ToString() : "";
@@ -614,6 +666,7 @@ namespace HarvestDataService
                                 users.Add(user);
                                 count++;
                             }
+                            
                             results.Dispose();
                         }
 
@@ -625,14 +678,8 @@ namespace HarvestDataService
                         //_logger.Log("Harvest GetUserADData: Domain Path is Invalid" + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                         log.PushLog("Harvest GetUserADData: Domain Path is Invalid " + domainPath + " " + asc.Message + asc.InnerException, "GetUserADData");
                     }
-
-                    //string strTarget = "LDAP://" + strDNSDomain;
-
-                    //string domainPath = strTarget;//"LDAP://yourdomain.com"; // Replace with your domain name
-                    //string searchFilter = "(&(objectCategory=person)(objectClass=user))";
-                    //string searchFilter = "(&(objectCategory=person)(objectClass=user)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
-
-               // }
+                }
+                
                 return users;
 
             }
@@ -644,6 +691,203 @@ namespace HarvestDataService
             }
         }
 
+        private List<Asset> GetComputerADDataOLD()
+        {
+            try
+            {
+                string tempDomainValue = "";
+                List<Asset> assets = new List<Asset>();
+
+                DirectoryEntry objRootDSE = new DirectoryEntry("LDAP://RootDSE");
+                string strDNSDomain = "";
+                string tempstrDNSDomain = "";
+                strDNSDomain = tempstrDNSDomain = _iArmRepo.GetAD_Domain();
+                if (String.IsNullOrEmpty(strDNSDomain))
+                {
+                    //strDNSDomain = objRootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    strDNSDomain = objRootDSE.Properties["rootDomainNamingContext"].Value.ToString();
+
+                }
+                string[] ldapPathComponents = strDNSDomain.Split(',');
+                string domainName = "";
+                string dc1 = "";
+                string dc2 = "";
+                string domainPath = "";
+
+                string firstDomain = ldapPathComponents[0].Substring(3);
+
+                for (int i = 0; i < ldapPathComponents.Length; i++)
+                {
+                    domainPath = null;
+                    domainName = "";
+                    dc1 = "";
+                    dc1 = ldapPathComponents[i].Substring(3);
+                    if (i + 1 == ldapPathComponents.Length)
+                    {
+                        if (ldapPathComponents.Length > 2)
+                        {
+                            domainName = firstDomain + "." + dc1;
+                            domainPath = "LDAP://DC=" + firstDomain + ",DC=" + dc2;
+                        }
+                    }
+                    else
+                    {
+                        dc2 = "";
+                        dc2 = ldapPathComponents[i + 1].Substring(3);
+                        domainName = dc1 + "." + dc2;
+                        domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+                    }
+                    //string domainPath = "LDAP://" + ldapPathComponents[i];
+                    
+                    if (domainPath == null)
+                    {
+                        break;
+                    }
+
+
+                    //string domainPath = strTarget;
+                    string searchFilter = "(&(objectCategory=computer))";
+                    try
+                    {
+                        DirectoryEntry entry = new DirectoryEntry(domainPath);
+                        DirectorySearcher searcher = new DirectorySearcher(entry, searchFilter);
+                        searcher.PageSize = 1;
+                        searcher.SizeLimit = 0;
+                        searcher.PropertiesToLoad.Clear();
+                        searcher.PropertiesToLoad.Add("cn");
+                        SearchResultCollection results = searcher.FindAll();
+                        int totalRecords = results.Count;
+
+                        searcher.PropertiesToLoad.Clear();
+                        searcher.PropertiesToLoad.AddRange(new string[] {
+                        "cn", "whenCreated", "description", "displayName", "dNSHostName",
+                        "userAccountControl", "eucDeviceType", "ipv4Address", "ipv6Address",
+                        "isDeleted", "lastLogonTimestamp", "location", "lockoutTime",
+                        "logonCount", "managedBy", "name", "operatingSystem",
+                        "operatingSystemVersion", "pwdLastSet","objectGUID","distinguishedName",
+                        "operatingSystemServicePack","whenChanged","servicePrincipalName","memberOf"
+                                     });
+                        searcher.PageSize = 6000;
+                        int count = 0;
+                        while (count < totalRecords)
+                        {
+                            results = searcher.FindAll();
+                            if (results == null || results.Count == 0)
+                            {
+                                 break;
+                            }
+                            
+                            foreach (SearchResult result in results)
+                            {
+                                Asset asset = new Asset();
+                                asset.AssetID = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
+                                asset.WhenCreated = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
+                                asset.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
+                                asset.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
+                                asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
+                                asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
+                                asset.EduDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
+                                asset.IPv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
+                                asset.IPv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
+                                asset.isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
+                                asset.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
+                                asset.Location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
+                                asset.LockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
+                                asset.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
+                                asset.ManagedBy = result.Properties["managedBy"].Count > 0 ? result.Properties["managedBy"][0].ToString() : "";
+                                asset.Name = result.Properties["name"].Count > 0 ? result.Properties["name"][0].ToString() : "";
+                                asset.OperatingSystem = result.Properties["operatingSystem"].Count > 0 ? result.Properties["operatingSystem"][0].ToString() : "";
+                                asset.OperatingSystemVersion = result.Properties["operatingSystemVersion"].Count > 0 ? result.Properties["operatingSystemVersion"][0].ToString() : "";
+                                asset.PasswordExpired = result.Properties["PasswordExpired"].Count > 0 ? result.Properties["PasswordExpired"][0].ToString() : "";
+                                asset.ObjectGUID = result.Properties["objectGUID"].Count > 0 ? result.Properties["objectGUID"][0].ToString() : "";
+                                asset.DistinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
+                                asset.OperatingSystemServicePack = result.Properties["operatingSystemServicePack"].Count > 0 ? result.Properties["operatingSystemServicePack"][0].ToString() : "";
+                                asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
+                                asset.ServicePrincipalName = result.Properties["servicePrincipalName"].Count > 0 ? result.Properties["servicePrincipalName"][0].ToString() : "";
+                                asset.MemberOf = result.Properties["memberOf"].Count > 0 ? result.Properties["memberOf"][0].ToString() : "";
+                                string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                                string[] parts = distinguishedName.Split(',');
+
+                                // iterate over the parts in reverse order and look for the "OU=" component
+                                foreach (string part in parts.Reverse())
+                                {
+                                    if (part.StartsWith("OU="))
+                                    {
+                                        // if an OU component is found, extract the name and return it
+                                        asset.OU = part.Substring(3);
+                                        break;
+                                    }
+                                }
+
+                                assets.Add(asset);
+                                count++;
+
+                            }
+                            tempDomainValue = domainPath.Substring(7);
+                            results.Dispose();
+                        }
+
+                        searcher.Dispose();
+                        entry.Dispose();
+                    }
+                    catch (DirectoryServicesCOMException e)
+                    {
+                    }
+                }
+                if (String.IsNullOrEmpty(tempstrDNSDomain))
+                {
+                    _iArmRepo.InsertAD_DomainName(tempDomainValue);
+                }
+                return assets;
+            }
+            catch (Exception ex)
+            {
+                 throw ex;
+            }
+
+        }
+
+        private static List<string> SplitDomain(string strDNSDomain)
+        {
+            List<string> Ldomain = new List<string>();
+
+            string[] ldapPathComponents = strDNSDomain.Split(',');
+            string domainName = "";
+            string dc1 = "";
+            string dc2 = "";
+            string domainPath = "";
+
+            string firstDomain = ldapPathComponents[0].Substring(3);
+
+            for (int i = 0; i < ldapPathComponents.Length; i++)
+            {
+                domainPath = null;
+                domainName = "";
+                dc1 = "";
+                dc1 = ldapPathComponents[i].Substring(3);
+                if (i + 1 == ldapPathComponents.Length)
+                {
+                    if (ldapPathComponents.Length > 2)
+                    {
+                        domainName = firstDomain + "." + dc1;
+                        domainPath = "LDAP://DC=" + firstDomain + ",DC=" + dc2;
+                    }
+                }
+                else
+                {
+                    dc2 = "";
+                    dc2 = ldapPathComponents[i + 1].Substring(3);
+                    domainName = dc1 + "." + dc2;
+                    domainPath = "LDAP://DC=" + dc1 + ",DC=" + dc2;
+                }
+                //string domainPath = "LDAP://" + ldapPathComponents[i];
+                Ldomain.Add(domainPath);
+            }
+            return Ldomain;
+        }
+
+        #endregion
         private void ExecutePing(string type,int Cadence)
         {
             List<AD_HarvesterResult> pingResult = new List<AD_HarvesterResult>();

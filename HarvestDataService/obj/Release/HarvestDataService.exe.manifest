@@ -3,7 +3,7 @@
   <asmv1:assemblyIdentity name="HarvestDataService.exe" version="1.0.0.2" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="msil" type="win32" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="HarvestDataService" version="1.0.0.8" language="neutral" processorArchitecture="msil" />
+    <assemblyIdentity name="HarvestDataService" version="1.0.0.9" language="neutral" processorArchitecture="msil" />
     <commandLine file="HarvestDataService.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -78,14 +78,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="12832256">
-      <assemblyIdentity name="HarvestDataService" version="1.0.0.8" language="neutral" processorArchitecture="msil" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="12835328">
+      <assemblyIdentity name="HarvestDataService" version="1.0.0.9" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>hShlukeph71crqpNcYAIhOh6xCkegR7fzRlnmwpoozg=</dsig:DigestValue>
+        <dsig:DigestValue>oW3nGZ+t9akzAoHgOpZPkMQjYg1GNQhreTIBlGjZPB4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

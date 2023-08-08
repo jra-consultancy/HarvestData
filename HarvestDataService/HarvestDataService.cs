@@ -103,14 +103,15 @@ namespace HarvestDataService
             _timerWMI.Elapsed += (sender2, e2) => harv.WMIAssetAsync(sender2, e2);
             _timerWMI.Start();
 
-            Thread.Sleep(10000);
-            log.PushLog("_timerWarranty Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
-            // Set up the timer to run at the scheduled time every  1 Minut
-            _timerWarranty.AutoReset = true;
-            _timerWarranty.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
-            _timerWarranty.Enabled = true;
-            _timerWarranty.Elapsed += (sender3, e3) => harv.WarrantyAssetAsync(sender3, e3);
-            _timerWarranty.Start();
+            
+            //Thread.Sleep(10000);
+            //log.PushLog("_timerWarranty Interval " + TimeSpan.FromMinutes(intInterval).TotalMilliseconds.ToString(), "");
+            //// Set up the timer to run at the scheduled time every  1 Minut
+            //_timerWarranty.AutoReset = true;
+            //_timerWarranty.Interval = TimeSpan.FromMinutes(intInterval).TotalMilliseconds;
+            //_timerWarranty.Enabled = true;
+            //_timerWarranty.Elapsed += (sender3, e3) => harv.WarrantyAssetAsync(sender3, e3);
+            //_timerWarranty.Start();
 
 
             log.PushLog("Service Running", "");
@@ -122,8 +123,8 @@ namespace HarvestDataService
             _timer.Enabled = false;
             _timerPing.Enabled = false;
             _timerWMI.Enabled = false;
-            _timerWarranty.Enabled = false;
-            _timerWarranty.Stop();
+            //_timerWarranty.Enabled = false;
+            //_timerWarranty.Stop();
             _timerWMI.Stop();
             _timer.Stop();
             _timerPing.Stop();
@@ -131,6 +132,8 @@ namespace HarvestDataService
             log.PushLog("Service stopped", "Service stopped");
 
         }
+
+
 
     }
 }

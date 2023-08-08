@@ -1,7 +1,7 @@
 
-/****** Object:  Table [dbo].[AD_Assets]    Script Date: 3/30/2023 2:47:51 PM ******/
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AD_Assets]') AND type in (N'U'))
-DROP TABLE [dbo].[AD_Assets]
+/****** Object:  Table [dbo].[TMP_Asset_AD]    Script Date: 3/30/2023 2:47:51 PM ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TMP_Asset_AD]') AND type in (N'U'))
+DROP TABLE [dbo].[TMP_Asset_AD]
 GO
 
 /****** Object:  Table [dbo].[AD_Assets]    Script Date: 3/30/2023 2:47:51 PM ******/
@@ -11,7 +11,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[AD_Assets](
+CREATE TABLE [dbo].[TMP_Asset_AD](
 	[AssetID] [nvarchar](255) NOT NULL,
 	[Description] [nvarchar](max) NULL,
 	[DisplayName] [nvarchar](255) NULL,
@@ -42,7 +42,7 @@ CREATE TABLE [dbo].[AD_Assets](
 	[MemberOf] [nvarchar](255) NULL,
 	[UserAccountControl] [nvarchar](255) NULL,
 	[OU] [nvarchar](250) NULL,
- CONSTRAINT [PK_AD_Assets] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_TMP_Asset_AD] PRIMARY KEY CLUSTERED 
 (
 	[AssetID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]

@@ -1,7 +1,7 @@
 
-/****** Object:  Table [dbo].[AD_User]    Script Date: 3/30/2023 2:47:28 PM ******/
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AD_User]') AND type in (N'U'))
-DROP TABLE [dbo].[AD_User]
+/****** Object:  Table [dbo].[TMP_User_AD]    Script Date: 3/30/2023 2:47:28 PM ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TMP_User_AD]') AND type in (N'U'))
+DROP TABLE [dbo].[TMP_User_AD]
 GO
 
 /****** Object:  Table [dbo].[AD_User]    Script Date: 3/30/2023 2:47:28 PM ******/
@@ -11,7 +11,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[AD_User](
+CREATE TABLE [dbo].[TMP_User_AD](
 	[UserId] [nvarchar](255) NOT NULL,
 	[AccountExpirationDate] [datetime] NULL,
 	[CO] [nvarchar](255) NULL,
@@ -41,7 +41,7 @@ CREATE TABLE [dbo].[AD_User](
 	[StreetAddress] [nvarchar](max) NULL,
 	[CountryCode] [nvarchar](50) NULL,
 	[OU] [nvarchar](250) NULL,
- CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_TMP_User_AD] PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
