@@ -56,7 +56,25 @@ namespace HarvestDataService
             
             isPingAssetRun = false;
 
-            //log.PushLog("Komang Here", "TesLog");
+            try {
+
+             string NoWaitMode = ConfigurationManager.AppSettings["NoWaitMode"];
+
+                if (NoWaitMode == "1")
+                {
+                    isDevMode = true;
+                    log.PushLog("NoWaitMode = true", "");
+                }
+                else {
+                    isDevMode = false;
+                    log.PushLog("NoWaitMode = false", "");
+                }
+
+            } catch {
+                log.PushLog("NoWaitMode = False", "");
+                isDevMode = false;
+            } 
+
         }
         private static readonly object Mylock = new object();
 
@@ -1307,9 +1325,9 @@ namespace HarvestDataService
 
                         }
                     }
-                    catch
+                    catch (Exception ex1)
                     {
-
+                     log.PushLog("Err In Item : " + Item + " ->"+ ex1.Message + ex1.InnerException, "ErrorWMIQuery");
                     }
 
                 return ListData;
@@ -1326,19 +1344,22 @@ namespace HarvestDataService
         private List<AD_HarvesterResult> GetAllMachineWarrantyData(DataTable dt)
         {
             List<AD_HarvesterResult> ListData = new List<AD_HarvesterResult>();
+
+            var options = new ChromeOptions();
+            options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36");
+
+            IWebDriver driver = new ChromeDriver(options);
+
+            IDevTools devTools = driver as IDevTools;
+            var session = devTools.GetDevToolsSession();
+            var network = session.Domains.Network;
+
+            network.EnableNetwork();
+            network.EnableNetworkCaching();
+
             try
             {
-                var options = new ChromeOptions();
-                options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36");
-
-                IWebDriver driver = new ChromeDriver(options);
-
-                IDevTools devTools = driver as IDevTools;
-                var session = devTools.GetDevToolsSession();
-                var network = session.Domains.Network;
-
-                network.EnableNetwork();
-                network.EnableNetworkCaching();
+                
 
                 // warm_up Dell
                 driver.Navigate().GoToUrl("https://www.dell.com/support/home/en-id?app=warranty");
@@ -1364,11 +1385,13 @@ namespace HarvestDataService
                     ListData.Add(allMachinePingData);
 
                 }
+                driver.Quit();
                 return ListData;
             }
             catch (Exception ex)
             {
                 log.PushLog("Harvest GetAllMachinePingData:" + ex.Message + ex.InnerException, "GetAllMachinePingData");
+                driver.Quit();
                 return ListData;
             }
         }

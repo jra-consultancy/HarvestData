@@ -112,4 +112,3 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\selenium-manager\windo
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.Support.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\chromedriver.exe
-D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csproj.AssemblyReference.cache

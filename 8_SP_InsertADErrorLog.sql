@@ -1,6 +1,22 @@
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SP_InsertADErrorLog]') AND type in (N'P'))
+
+IF OBJECT_ID('SP_InsertADErrorLog', 'P') IS NOT NULL
+BEGIN
 DROP PROCEDURE [dbo].[SP_InsertADErrorLog]
+END
+
+IF OBJECT_ID('AD_ErrorLog', 'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[AD_ErrorLog](
+	[ErrorLogId] [int] IDENTITY(1,1) NOT NULL,
+	[ErrorMsg] [varchar](max) NULL,
+	[Event] [varchar](250) NULL,
+	[ErrorDate] DATETIME NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+END
 GO
+
+
 CREATE PROCEDURE [dbo].[SP_InsertADErrorLog]
     @ErrorMsg NVARCHAR(MAX),
 	@Event NVARCHAR(255)

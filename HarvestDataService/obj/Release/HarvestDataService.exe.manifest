@@ -78,14 +78,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="12835328">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HarvestDataService.exe" size="12835840">
       <assemblyIdentity name="HarvestDataService" version="1.0.0.9" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>oW3nGZ+t9akzAoHgOpZPkMQjYg1GNQhreTIBlGjZPB4=</dsig:DigestValue>
+        <dsig:DigestValue>MLk+Wg3VTw3gJgzRegl25xvkecf4wkz2J0pRRbnJWo4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -233,13 +233,13 @@
       </hash>
     </dependentAssembly>
   </dependency>
-  <file name="HarvestDataService.exe.config" size="3905">
+  <file name="HarvestDataService.exe.config" size="3622">
     <hash>
       <dsig:Transforms>
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>0EYgv65K/QYF1DoL3CH4SF4QhivF4ra2+il4TtTzUFk=</dsig:DigestValue>
+      <dsig:DigestValue>K90+BET0Xd+Am3sfNIwVFPBRna/eViIC1zi1Z+D7/xE=</dsig:DigestValue>
     </hash>
   </file>
 </asmv1:assembly>
