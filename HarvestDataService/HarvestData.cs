@@ -29,6 +29,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.Support.UI;
+using Newtonsoft.Json;
 
 namespace HarvestDataService
 {
@@ -260,7 +261,8 @@ namespace HarvestDataService
             try
             {
                 IsWarrantyAssetRun = true;
-                ///komang aranty have bug ill be fix
+                
+                ///komang aranty have bug it will be fix
                 //ExecuteWarranty(type = "Warranty", now.Hour + 1);
 
                 IsWarrantyAssetRun = false;
@@ -304,25 +306,33 @@ namespace HarvestDataService
         #region AD
         private void ExecuteADData()
         {
-            List<Asset> assets = GetComputerADData();
-            if (assets.Count() > 0)
+            DataTable assets = GetComputerADData();
+            if (assets.Rows.Count > 0)
             {
-                _iArmRepo.InsertBulkAssetsADData(ConvertToDataTable(assets));
+                string AssTable = _iArmRepo.GetGlobalProperties("HATable");
+                _iArmRepo.InsertBulkAD(assets, AssTable);
+                //_iArmRepo.InsertBulkAssetsADData(assets);
+                //_iArmRepo.InsertBulkAssetsADData(ConvertToDataTable(assets));
 
             }
-            List<User> users = GetUserADData();
-            if (users.Count() > 0)
+            DataTable users = GetUserADData();
+            if (users.Rows.Count > 0)
             {
-                _iArmRepo.InsertBulkUsersADData(ConvertToDataTable(users));
+                string UsrTable = _iArmRepo.GetGlobalProperties("HUTable"); 
+                _iArmRepo.InsertBulkAD(users, UsrTable);
+                //_iArmRepo.InsertBulkUsersADData(users);
+                //_iArmRepo.InsertBulkUsersADData(ConvertToDataTable(users));
 
             }
 
         }
 
-        private List<Asset> GetComputerADData()
+        private DataTable GetComputerADData()
         {
             try
             {
+                DataTable AssetData = new DataTable();
+
                 string tempDomainValue = "";
                 List<Asset> assets = new List<Asset>();
                 List<string> LDomain = new List<string>();
@@ -368,7 +378,10 @@ namespace HarvestDataService
                 //_logger.Log("Harvest GetComputerADData: Domain Path is " + domainPath, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy"))) // (|(!(userAccountControl:1.2.840.113556.1.4.803:=2))(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + "));
                 
                 DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);
-                string searchFilter = "(&(objectCategory=computer)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+
+                //string searchFilter = "(&(objectCategory=computer)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+               
+                string searchFilter = _iArmRepo.GetGlobalProperties("HAFilter");
 
                 foreach (string DomainName in LDomain) {
 
@@ -399,19 +412,56 @@ namespace HarvestDataService
                         SearchResultCollection results = searcher.FindAll();
                         int totalRecords = results.Count;
 
+                        string JsonQuery = _iArmRepo.GetGlobalProperties("HAQuery");
+                        
+                        List<QueryAD> Lquery = JsonConvert.DeserializeObject<List<QueryAD>>(JsonQuery);
+
+                        //string[] LQuery = _iArmRepo.GetGlobalProperties("HAQuery").Split(',');
+
                         searcher.PropertiesToLoad.Clear();
-                        searcher.PropertiesToLoad.AddRange(new string[] {
-                        "cn", "whenCreated", "description", "displayName", "dNSHostName",
-                        "userAccountControl", "eucDeviceType", "ipv4Address", "ipv6Address",
-                        "isDeleted", "lastLogonTimestamp", "location", "lockoutTime",
-                        "logonCount", "managedBy", "name", "operatingSystem",
-                        "operatingSystemVersion", "pwdLastSet","objectGUID","distinguishedName",
-                        "operatingSystemServicePack","whenChanged","servicePrincipalName","memberOf"
-                                     });
+
+                       
+
+                        foreach (QueryAD Qad in Lquery)
+                        {
+                            searcher.PropertiesToLoad.Add(Qad.query);
+
+                            if (Qad.datatype == "Int32") {
+                                DataColumn column = new DataColumn(Qad.ColumnName, typeof(Int32));
+                                column.AllowDBNull = true;
+                                AssetData.Columns.Add(column);
+                                 }
+                            else if (Qad.datatype == "DateTime") {
+                                DataColumn column = new DataColumn(Qad.ColumnName, typeof(DateTime));
+                                column.AllowDBNull = true;
+                                AssetData.Columns.Add(column);
+                               
+                            }
+                            else { AssetData.Columns.Add(Qad.ColumnName, typeof(string)); }
+                           
+                        }
+
+                        
+
+                        //searcher.PropertiesToLoad.AddRange(new string[] {
+                        //"cn", "whenCreated", "description", "displayName", "dNSHostName",
+                        //"userAccountControl", "eucDeviceType", "ipv4Address", "ipv6Address",
+                        //"isDeleted", "lastLogonTimestamp", "location", "lockoutTime",
+                        //"logonCount", "managedBy", "name", "operatingSystem",
+                        //"operatingSystemVersion", "pwdLastSet","objectGUID","distinguishedName",
+                        //"operatingSystemServicePack","whenChanged","servicePrincipalName","memberOf"
+                        //             });
+
                         searcher.PageSize = 6000;
                         int count = 0;
                         //_logger.Log("Harvest GetComputerADData: Records found: " + totalRecords, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                         log.PushLog("Harvest GetComputerADData: Records found: " + totalRecords, "");
+
+
+                        //AssetData.Columns.Add("ID", typeof(int));
+
+                       
+
 
                         while (count < totalRecords)
                         {
@@ -425,81 +475,185 @@ namespace HarvestDataService
 
                             //_logger.Log("Harvest GetComputerADData: Connection Established ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                             log.PushLog("Harvest GetComputerADData: Connection Established ", "");
-                            foreach (SearchResult result in results)
-                            {
-                                Asset asset = new Asset();
-                                asset.AssetID = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
-                                asset.WhenCreated = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
-                                asset.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
-                                asset.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
-                                asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
-                                //asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
 
-                                if (result.Properties["userAccountControl"].Count > 0)
-                                {
-                                    int userAccountControl = (int)result.Properties["userAccountControl"][0];
-                                    int AccountDisabled = 0x0002;
-                                    asset.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
-                                }
-                                else
-                                {
-                                    asset.Enabled = false;
-                                }
 
-                                asset.EduDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
-                                asset.IPv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
-                                asset.IPv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
-                                asset.isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
-                                asset.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
-                                asset.Location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
-                                asset.LockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
-                                asset.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
-                                asset.ManagedBy = result.Properties["managedBy"].Count > 0 ? result.Properties["managedBy"][0].ToString() : "";
-                                asset.Name = result.Properties["name"].Count > 0 ? result.Properties["name"][0].ToString() : "";
-                                asset.OperatingSystem = result.Properties["operatingSystem"].Count > 0 ? result.Properties["operatingSystem"][0].ToString() : "";
-                                asset.OperatingSystemVersion = result.Properties["operatingSystemVersion"].Count > 0 ? result.Properties["operatingSystemVersion"][0].ToString() : "";
-                                asset.PasswordExpired = result.Properties["PasswordExpired"].Count > 0 ? result.Properties["PasswordExpired"][0].ToString() : "";
-
-                                try
+                            foreach (SearchResult result in results) {
+                                
+                                DataRow rowAsset = AssetData.NewRow();
+                                
+                               // rowAsset["ID"] = count;
+                                
+                                foreach (QueryAD Qad in Lquery)
                                 {
-                                    if (result.Properties["objectGUID"].Count > 0)
+                                    string Val = "";
+                                    
+                                    if (Qad.query == "Enabled")
                                     {
 
-                                        byte[] objbuf = (byte[])result.Properties["objectGUID"][0];
-                                        asset.ObjectGUID = new Guid(objbuf).ToString();
+                                        if (result.Properties["userAccountControl"].Count > 0)
+                                        {
+                                            int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                                            int AccountDisabled = 0x0002;
+                                            Val = ((userAccountControl & AccountDisabled) != AccountDisabled) ? "1" : "0";
+                                        }
+                                        else
+                                        {
+                                            Val = "0";
+                                        }
+
                                     }
-                                    else
+                                    else if (Qad.query == "objectGUID")
                                     {
-                                        asset.ObjectGUID = "";
+                                        try
+                                        {
+                                            if (result.Properties[Qad.query].Count > 0)
+                                            {
+
+                                                byte[] objbuf = (byte[])result.Properties[Qad.query][0];
+                                                Val = new Guid(objbuf).ToString();
+                                            }
+                                            else
+                                            {
+                                                Val = "";
+                                            }
+                                        }
+                                        catch { Val = ""; }
+
                                     }
-                                }
-                                catch { asset.ObjectGUID = ""; }
-
-                                asset.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
-                                asset.DistinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
-                                asset.OperatingSystemServicePack = result.Properties["operatingSystemServicePack"].Count > 0 ? result.Properties["operatingSystemServicePack"][0].ToString() : "";
-                                asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
-                                asset.ServicePrincipalName = result.Properties["servicePrincipalName"].Count > 0 ? result.Properties["servicePrincipalName"][0].ToString() : "";
-                                asset.MemberOf = result.Properties["memberOf"].Count > 0 ? result.Properties["memberOf"][0].ToString() : "";
-                                string distinguishedName = result.Properties["distinguishedName"][0].ToString();
-
-                                string[] parts = distinguishedName.Split(',');
-
-                                // iterate over the parts in reverse order and look for the "OU=" component
-                                foreach (string part in parts.Reverse())
-                                {
-                                    if (part.StartsWith("OU="))
+                                    else if (Qad.query == "OU")
                                     {
-                                        // if an OU component is found, extract the name and return it
-                                        asset.OU = part.Substring(3);
-                                        break;
-                                    }
-                                }
+                                        string distinguishedName = result.Properties["distinguishedName"][0].ToString();
 
-                                assets.Add(asset);
+                                        string[] parts = distinguishedName.Split(',');
+
+                                        // iterate over the parts in reverse order and look for the "OU=" component
+                                        foreach (string part in parts.Reverse())
+                                        {
+                                            if (part.StartsWith("OU="))
+                                            {
+                                                // if an OU component is found, extract the name and return it
+                                                Val = part.Substring(3);
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                    else if (Qad.query == "lastLogonTimestamp")
+                                    {
+                                        
+                                        Val = result.Properties[Qad.query].Count > 0 ? DateTime.FromFileTime((long)result.Properties[Qad.query][0]).ToString() : "";
+
+                                    }
+                                    else {
+
+                                        Val = result.Properties[Qad.query].Count > 0 ? result.Properties[Qad.query][0].ToString() : "";
+
+                                    }
+
+                                    if (Val == "")
+                                    {
+                                        Val = null;
+                                    }
+
+
+
+                                    if (Qad.datatype == "Int32") { Int32 nNumber = Int32.TryParse(Val, out nNumber) ? nNumber : 0; rowAsset[Qad.ColumnName] = nNumber;  }
+                                    else if (Qad.datatype == "DateTime") {
+                                        DateTime date;
+                                        if (DateTime.TryParse(Val, out date))
+                                        {
+                                            rowAsset[Qad.ColumnName] =  date;
+                                        }
+                                        else
+                                        {
+                                            rowAsset[Qad.ColumnName] = DBNull.Value;
+                                        }
+                                    }
+                                    else { rowAsset[Qad.ColumnName] = Val; }
+                                    
+                                }
+                                
+                                AssetData.Rows.Add(rowAsset);
                                 count++;
-
                             }
+
+                            //foreach (SearchResult result in results)
+                            //{
+                            //    Asset asset = new Asset();
+                            //    asset.AssetID = result.Properties["cn"].Count > 0 ? result.Properties["cn"][0].ToString() : "";
+                            //    asset.WhenCreated = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
+                            //    asset.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
+                            //    asset.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
+                            //    asset.DNSHostName = result.Properties["dNSHostName"].Count > 0 ? result.Properties["dNSHostName"][0].ToString() : "";
+                            //    //asset.Enabled = result.Properties["userAccountControl"].Count > 0 ? Convert.ToInt32(result.Properties["userAccountControl"][0]) != 0x0002 : false;
+
+                            //    if (result.Properties["userAccountControl"].Count > 0)
+                            //    {
+                            //        int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                            //        int AccountDisabled = 0x0002;
+                            //        asset.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
+                            //    }
+                            //    else
+                            //    {
+                            //        asset.Enabled = false;
+                            //    }
+
+                            //    asset.EduDeviceType = result.Properties["eucDeviceType"].Count > 0 ? result.Properties["eucDeviceType"][0].ToString() : "";
+                            //    asset.IPv4Address = result.Properties["ipv4Address"].Count > 0 ? result.Properties["ipv4Address"][0].ToString() : "";
+                            //    asset.IPv6Address = result.Properties["ipv6Address"].Count > 0 ? result.Properties["ipv6Address"][0].ToString() : "";
+                            //    asset.isDeleted = result.Properties["isDeleted"].Count > 0 ? (bool)result.Properties["isDeleted"][0] : false;
+                            //    asset.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
+                            //    asset.Location = result.Properties["location"].Count > 0 ? result.Properties["location"][0].ToString() : "";
+                            //    asset.LockedOut = result.Properties["lockoutTime"].Count > 0 ? Convert.ToInt64(result.Properties["lockoutTime"][0]) != 0 : false;
+                            //    asset.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
+                            //    asset.ManagedBy = result.Properties["managedBy"].Count > 0 ? result.Properties["managedBy"][0].ToString() : "";
+                            //    asset.Name = result.Properties["name"].Count > 0 ? result.Properties["name"][0].ToString() : "";
+                            //    asset.OperatingSystem = result.Properties["operatingSystem"].Count > 0 ? result.Properties["operatingSystem"][0].ToString() : "";
+                            //    asset.OperatingSystemVersion = result.Properties["operatingSystemVersion"].Count > 0 ? result.Properties["operatingSystemVersion"][0].ToString() : "";
+                            //    asset.PasswordExpired = result.Properties["PasswordExpired"].Count > 0 ? result.Properties["PasswordExpired"][0].ToString() : "";
+
+                            //    try
+                            //    {
+                            //        if (result.Properties["objectGUID"].Count > 0)
+                            //        {
+
+                            //            byte[] objbuf = (byte[])result.Properties["objectGUID"][0];
+                            //            asset.ObjectGUID = new Guid(objbuf).ToString();
+                            //        }
+                            //        else
+                            //        {
+                            //            asset.ObjectGUID = "";
+                            //        }
+                            //    }
+                            //    catch { asset.ObjectGUID = ""; }
+
+                            //    asset.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
+                            //    asset.DistinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
+                            //    asset.OperatingSystemServicePack = result.Properties["operatingSystemServicePack"].Count > 0 ? result.Properties["operatingSystemServicePack"][0].ToString() : "";
+                            //    asset.WhenChanged = result.Properties["whenChanged"].Count > 0 ? (DateTime?)result.Properties["whenChanged"][0] : null;
+                            //    asset.ServicePrincipalName = result.Properties["servicePrincipalName"].Count > 0 ? result.Properties["servicePrincipalName"][0].ToString() : "";
+                            //    asset.MemberOf = result.Properties["memberOf"].Count > 0 ? result.Properties["memberOf"][0].ToString() : "";
+                               
+                            //    string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                            //    string[] parts = distinguishedName.Split(',');
+
+                            //    // iterate over the parts in reverse order and look for the "OU=" component
+                            //    foreach (string part in parts.Reverse())
+                            //    {
+                            //        if (part.StartsWith("OU="))
+                            //        {
+                            //            // if an OU component is found, extract the name and return it
+                            //            asset.OU = part.Substring(3);
+                            //            break;
+                            //        }
+                            //    }
+
+                            //    assets.Add(asset);
+                            //    count++;
+
+                            //}
+                            
                             tempDomainValue = domainPath.Substring(7);
                             results.Dispose();
                         }
@@ -516,7 +670,7 @@ namespace HarvestDataService
 
                 }
 
-                return assets;
+                return AssetData;
             }
             catch (Exception ex)
             {
@@ -527,10 +681,12 @@ namespace HarvestDataService
 
         }
 
-        private List<User> GetUserADData()
+        private DataTable GetUserADData()
         {
             try
             {
+                DataTable UserData = new DataTable();
+
                 List<User> users = new List<User>();
                 
                 List<string> LDomain = new List<string>();
@@ -569,7 +725,9 @@ namespace HarvestDataService
                 
                 
                 DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);//(whenChanged>="+thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z")+") (|(userAccountControl:1.2.840.113556.1.4.803:=2)(whenChanged>=" + thirtyDaysAgo.ToString("yyyyMMddHHmmss.0Z") + "))
-                string searchFilter = "(&(objectCategory=person)(objectClass=user)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+                //string searchFilter = "(&(objectCategory=person)(objectClass=user)(!samaccountname=Administrator)(!samaccountname=SYSTEM)(!description=Built-in account for administering the computer/domain)(!userAccountControl:1.2.840.113556.1.4.803:=2))";
+
+                string searchFilter = _iArmRepo.GetGlobalProperties("HUFilter");
 
                 foreach (string DomainName in LDomain) {
 
@@ -599,17 +757,49 @@ namespace HarvestDataService
                         SearchResultCollection results = searcher.FindAll();
                         int totalRecords = results.Count;
 
+                        string JsonQuery = _iArmRepo.GetGlobalProperties("HUQuery");
+
+                        List<QueryAD> Lquery = JsonConvert.DeserializeObject<List<QueryAD>>(JsonQuery);
+
+                        //string[] LQuery  = _iArmRepo.GetGlobalProperties("HUQuery").Split(',');
+
                         searcher.PropertiesToLoad.Clear();
-                        searcher.PropertiesToLoad.AddRange(new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
-                    "department", "description", "displayName", "mail","employeeID","enabled","uSNCreated","logonCount","mailNickname",
-                    "manager","PasswordExpired","physicalDeliveryOfficeName","postalCode","sn","telephoneNumber","title","userAccountControl",
-                    "sAMAccountName","streetAddress","countryCode","distinguishedName"
-                     });
+
+                        foreach (QueryAD Qad in Lquery)
+                        {
+                            searcher.PropertiesToLoad.Add(Qad.query);
+
+                            if (Qad.datatype == "Int32")
+                            {
+                                DataColumn column = new DataColumn(Qad.ColumnName, typeof(Int32));
+                                column.AllowDBNull = true;
+                                UserData.Columns.Add(column);
+                            }
+                            else if (Qad.datatype == "DateTime")
+                            {
+                                DataColumn column = new DataColumn(Qad.ColumnName, typeof(DateTime));
+                                column.AllowDBNull = true;
+                                UserData.Columns.Add(column);
+
+                            }
+                            else { UserData.Columns.Add(Qad.ColumnName, typeof(string)); }
+
+                        }
+
+                        //searcher.PropertiesToLoad.AddRange(LQuery);
+
+                        //    searcher.PropertiesToLoad.AddRange(new string[] { "userPrincipalName", "AccountExpirationDate", "givenName", "company", "lastLogonTimestamp",
+                        //"department", "description", "displayName", "mail","employeeID","enabled","uSNCreated","logonCount","mailNickname",
+                        //"manager","PasswordExpired","physicalDeliveryOfficeName","postalCode","sn","telephoneNumber","title","userAccountControl",
+                        //"sAMAccountName","streetAddress","countryCode","distinguishedName"
+                        // });
                         searcher.PageSize = 6000;
                         int count = 0;
 
                         //_logger.Log("Harvest GetUserADData: Records found: " + totalRecords, UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                         log.PushLog("Harvest GetUserADData: Records found: " + totalRecords, "");
+
+                       
 
                         while (count < totalRecords)
                         {
@@ -623,67 +813,152 @@ namespace HarvestDataService
                             //_logger.Log("Harvest GetUserADData: Connection Established ", UploadLogFile.Replace("DDMMYY", DateTime.Now.ToString("ddMMyy")));
                             log.PushLog("Harvest GetUserADData: Connection Established ", "");
 
-                            foreach (SearchResult result in results)
-                            {
-                                User user = new User();
-                                user.UserId = result.Properties["userPrincipalName"].Count > 0 ? result.Properties["userPrincipalName"][0].ToString() : Convert.ToString(Guid.NewGuid());
-                                user.AccountExpirationDate = result.Properties["AccountExpirationDate"].Count > 0 ? (DateTime?)result.Properties["AccountExpirationDate"][0] : null;
-                                user.GivenName = result.Properties["givenName"].Count > 0 ? result.Properties["givenName"][0].ToString() : "";
-                                user.CO = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
-                                user.Company = result.Properties["company"].Count > 0 ? result.Properties["company"][0].ToString() : "";
-                                user.CreateTimeStamp = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
-                                user.Department = result.Properties["department"].Count > 0 ? result.Properties["department"][0].ToString() : "";
-                                user.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
-                                user.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
-                                user.EmailAddress = result.Properties["mail"].Count > 0 ? result.Properties["mail"][0].ToString() : "";
-                                user.EmployeeID = result.Properties["employeeID"].Count > 0 ? result.Properties["employeeID"][0].ToString() : "";
-                                //user.Enabled = result.Properties["enabled"].Count > 0 ? Convert.ToInt64(result.Properties["enabled"][0]) != 0 : false;
 
-                                if (result.Properties["userAccountControl"].Count > 0)
-                                {
-                                    int userAccountControl = (int)result.Properties["userAccountControl"][0];
-                                    int AccountDisabled = 0x0002;
-                                    user.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
-                                }
-                                else
-                                {
-                                    user.Enabled = false;
-                                }
+                            foreach (SearchResult result in results) {
+                                DataRow rowUser = UserData.NewRow();
 
-                                user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
-                                user.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
-                                user.mailNickname = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
-                                user.manager = result.Properties["manager"].Count > 0 ? result.Properties["manager"][0].ToString() : "";
-                                user.PasswordExpired = result.Properties["PasswordExpired"].Count > 0 ? Convert.ToInt64(result.Properties["PasswordExpired"][0]) != 0 : false;
-                                user.PhysicalDeliveryOfficeName = result.Properties["physicalDeliveryOfficeName"].Count > 0 ? result.Properties["physicalDeliveryOfficeName"][0].ToString() : "";
-                                user.postalCode = result.Properties["postalCode"].Count > 0 ? result.Properties["postalCode"][0].ToString() : "";
-                                user.Surname = result.Properties["sn"].Count > 0 ? result.Properties["sn"][0].ToString() : "";
-                                user.TelephoneNumber = result.Properties["telephoneNumber"].Count > 0 ? result.Properties["telephoneNumber"][0].ToString() : "";
-                                user.Title = result.Properties["title"].Count > 0 ? result.Properties["title"][0].ToString() : "";
-                                user.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
-                                user.SamAccountName = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
-                                user.StreetAddress = result.Properties["streetAddress"].Count > 0 ? result.Properties["streetAddress"][0].ToString() : "";
-                                user.CountryCode = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
-                                string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+                                foreach (QueryAD Qad in Lquery) {
+                                    string Val = "";
 
-                                string[] parts = distinguishedName.Split(',');
-
-                                // iterate over the parts in reverse order and look for the "OU=" component
-                                foreach (string part in parts.Reverse())
-                                {
-                                    if (part.StartsWith("OU="))
+                                    if (Qad.query == "enabled")
                                     {
-                                        // if an OU component is found, extract the name and return it
-                                        user.OU = part.Substring(3);
-                                        break;
+
+                                        if (result.Properties["userAccountControl"].Count > 0)
+                                        {
+                                            int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                                            int AccountDisabled = 0x0002;
+                                            Val = ((userAccountControl & AccountDisabled) != AccountDisabled) ? "1" : "0";
+                                        }
+                                        else
+                                        {
+                                            Val = "0";
+                                        }
+
+                            
+
                                     }
+                                    else if (Qad.query == "OU")
+                                    {
+                                        string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                                        string[] parts = distinguishedName.Split(',');
+
+                                        // iterate over the parts in reverse order and look for the "OU=" component
+                                        foreach (string part in parts.Reverse())
+                                        {
+                                            if (part.StartsWith("OU="))
+                                            {
+                                                // if an OU component is found, extract the name and return it
+                                                Val = part.Substring(3);
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                    else if (Qad.query == "lastLogonTimestamp")
+                                    {
+
+                                        Val = result.Properties[Qad.query].Count > 0 ? DateTime.FromFileTime((long)result.Properties[Qad.query][0]).ToString() : "";
+
+                                    }
+                                    else
+                                    {
+
+                                        Val = result.Properties[Qad.query].Count > 0 ? result.Properties[Qad.query][0].ToString() : "";
+
+                                    }
+                                    if (Val == "") {
+                                        Val = null;
+                                    }
+
+
+                                    if (Qad.datatype == "Int32") 
+                                    { 
+                                        Int32 nNumber = Int32.TryParse(Val, out nNumber) ? nNumber : 0; 
+                                        rowUser[Qad.ColumnName] = nNumber; 
+                                    }
+                                    else if (Qad.datatype == "DateTime")
+                                    {
+                                        DateTime date;
+                                        if (DateTime.TryParse(Val, out date))
+                                        {
+                                            rowUser[Qad.ColumnName] = date;
+                                        }
+                                        else
+                                        {
+                                            rowUser[Qad.ColumnName] = DBNull.Value;
+                                        }
+                                    }
+                                    else { rowUser[Qad.ColumnName] = Val; }
+
                                 }
 
-
-
-                                users.Add(user);
+                                UserData.Rows.Add(rowUser);
                                 count++;
                             }
+
+                            //foreach (SearchResult result in results)
+                            //{
+                            //    User user = new User();
+                            //    user.UserId = result.Properties["userPrincipalName"].Count > 0 ? result.Properties["userPrincipalName"][0].ToString() : Convert.ToString(Guid.NewGuid());
+                            //    user.AccountExpirationDate = result.Properties["AccountExpirationDate"].Count > 0 ? (DateTime?)result.Properties["AccountExpirationDate"][0] : null;
+                            //    user.GivenName = result.Properties["givenName"].Count > 0 ? result.Properties["givenName"][0].ToString() : "";
+                            //    user.CO = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
+                            //    user.Company = result.Properties["company"].Count > 0 ? result.Properties["company"][0].ToString() : "";
+                            //    user.CreateTimeStamp = result.Properties["whenCreated"].Count > 0 ? (DateTime?)result.Properties["whenCreated"][0] : null;
+                            //    user.Department = result.Properties["department"].Count > 0 ? result.Properties["department"][0].ToString() : "";
+                            //    user.Description = result.Properties["description"].Count > 0 ? result.Properties["description"][0].ToString() : "";
+                            //    user.DisplayName = result.Properties["displayName"].Count > 0 ? result.Properties["displayName"][0].ToString() : "";
+                            //    user.EmailAddress = result.Properties["mail"].Count > 0 ? result.Properties["mail"][0].ToString() : "";
+                            //    user.EmployeeID = result.Properties["employeeID"].Count > 0 ? result.Properties["employeeID"][0].ToString() : "";
+                            //    //user.Enabled = result.Properties["enabled"].Count > 0 ? Convert.ToInt64(result.Properties["enabled"][0]) != 0 : false;
+
+                            //    if (result.Properties["userAccountControl"].Count > 0)
+                            //    {
+                            //        int userAccountControl = (int)result.Properties["userAccountControl"][0];
+                            //        int AccountDisabled = 0x0002;
+                            //        user.Enabled = (userAccountControl & AccountDisabled) != AccountDisabled;
+                            //    }
+                            //    else
+                            //    {
+                            //        user.Enabled = false;
+                            //    }
+
+                            //    user.LastLogonDate = result.Properties["lastLogonTimestamp"].Count > 0 ? DateTime.FromFileTime((long)result.Properties["lastLogonTimestamp"][0]) : (DateTime?)null;
+                            //    user.logonCount = result.Properties["logonCount"].Count > 0 ? Convert.ToInt32(result.Properties["logonCount"][0]) : 0;
+                            //    user.mailNickname = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
+                            //    user.manager = result.Properties["manager"].Count > 0 ? result.Properties["manager"][0].ToString() : "";
+                            //    user.PasswordExpired = result.Properties["PasswordExpired"].Count > 0 ? Convert.ToInt64(result.Properties["PasswordExpired"][0]) != 0 : false;
+                            //    user.PhysicalDeliveryOfficeName = result.Properties["physicalDeliveryOfficeName"].Count > 0 ? result.Properties["physicalDeliveryOfficeName"][0].ToString() : "";
+                            //    user.postalCode = result.Properties["postalCode"].Count > 0 ? result.Properties["postalCode"][0].ToString() : "";
+                            //    user.Surname = result.Properties["sn"].Count > 0 ? result.Properties["sn"][0].ToString() : "";
+                            //    user.TelephoneNumber = result.Properties["telephoneNumber"].Count > 0 ? result.Properties["telephoneNumber"][0].ToString() : "";
+                            //    user.Title = result.Properties["title"].Count > 0 ? result.Properties["title"][0].ToString() : "";
+                            //    user.UserAccountControl = result.Properties["userAccountControl"].Count > 0 ? result.Properties["userAccountControl"][0].ToString() : "";
+                            //    user.SamAccountName = result.Properties["sAMAccountName"].Count > 0 ? result.Properties["sAMAccountName"][0].ToString() : "";
+                            //    user.StreetAddress = result.Properties["streetAddress"].Count > 0 ? result.Properties["streetAddress"][0].ToString() : "";
+                            //    user.CountryCode = result.Properties["countryCode"].Count > 0 ? result.Properties["countryCode"][0].ToString() : "";
+                                
+                            //    string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+
+                            //    string[] parts = distinguishedName.Split(',');
+
+                            //    // iterate over the parts in reverse order and look for the "OU=" component
+                            //    foreach (string part in parts.Reverse())
+                            //    {
+                            //        if (part.StartsWith("OU="))
+                            //        {
+                            //            // if an OU component is found, extract the name and return it
+                            //            user.OU = part.Substring(3);
+                            //            break;
+                            //        }
+                            //    }
+
+
+
+                            //    users.Add(user);
+                            //    count++;
+                            //}
                             
                             results.Dispose();
                         }
@@ -698,7 +973,7 @@ namespace HarvestDataService
                     }
                 }
                 
-                return users;
+                return UserData;
 
             }
             catch (Exception ex)
@@ -1418,6 +1693,8 @@ namespace HarvestDataService
             }
     
         }
+
+
         private string GetIpAddress(string machineName)
         {
             string IpAddres = "TimeOut";

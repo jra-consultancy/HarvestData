@@ -41,6 +41,7 @@
             // HarvestData
             // 
             this.HarvestData.ServiceName = "CV Harvest Data Service";
+            this.HarvestData.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.HarvestData_AfterInstall);
             // 
             // ProjectInstaller
             // 

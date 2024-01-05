@@ -112,3 +112,11 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\selenium-manager\windo
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\WebDriver.Support.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\chromedriver.exe
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\Newtonsoft.Json.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Encodings.Web.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Json.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.ValueTuple.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\Newtonsoft.Json.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Encodings.Web.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Json.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.ValueTuple.xml

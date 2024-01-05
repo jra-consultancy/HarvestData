@@ -13,7 +13,7 @@ namespace HarvestDataService
 
         //string GetFileLocation(int Key);
         DataTable GetAssetData(string type, int Cadence);
-        void InsertBulkAssetData(DataTable pingResult);
+        //void InsertBulkAssetData(DataTable pingResult);
         void UpdateAssetStatus(string type);
 
         void InsertBulkAssetsADData(DataTable assets);
@@ -26,6 +26,7 @@ namespace HarvestDataService
         void UpdateHarvestResult(DataTable Res, string Type);
         void ResetHarvestResult(string Type);
         string GetGlobalProperties(string propertyName);
+        void InsertBulkAD(DataTable Data, string TableName);
 
     }
 }

@@ -16,8 +16,8 @@ namespace HarvestDataService
         static void Main()
         {
             //var fileParser = new HarvestData();
-            ////fileParser.Harvest();
-            ////fileParser.PingAsset();
+            //fileParser.Harvest();
+            //fileParser.PingAsset();
             //fileParser.GetWMIAsset();
             //Console.ReadLine();
 

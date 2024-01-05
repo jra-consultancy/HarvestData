@@ -20,5 +20,10 @@ namespace HarvestDataService
         {
 
         }
+
+        private void HarvestData_AfterInstall(object sender, InstallEventArgs e)
+        {
+
+        }
     }
 }

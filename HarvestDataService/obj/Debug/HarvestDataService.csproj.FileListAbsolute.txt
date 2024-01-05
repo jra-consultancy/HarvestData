@@ -214,3 +214,4 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\macos\s
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\windows\selenium-manager.exe
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.Support.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\chromedriver.exe

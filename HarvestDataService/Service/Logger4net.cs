@@ -46,6 +46,45 @@ namespace HarvestDataService.Service
 
         }
 
+        public string GetGlobalProperties(string propertyName)
+        {
+
+            string location = "";
+            //string sourceTableQuery = "Select PropertyValue from [SystemGlobalProperties] WHERE [PropertyName] = @propertyName";
+            string sourceTableQuery = "select [dbo].[fnGlobalProperty](@propertyName) AS PropertyValue";
+
+            try
+            {
+                _connectionDB.con.Open();
+                using (SqlCommand cmd = new SqlCommand(sourceTableQuery, _connectionDB.con))
+                {
+                    cmd.Parameters.AddWithValue("@propertyName", propertyName);
+
+                    //var dr = cmd.ExecuteReader();
+                    location = (string)cmd.ExecuteScalar();
+
+      
+
+                }
+                _connectionDB.con.Close();
+                return location;
+            }
+            catch (Exception ex)
+            {
+                PushLog("GetGlobalProperties Exception: :" + ex.Message + ex.InnerException, "GetGlobalProperties");
+                return "";
+            }
+            finally
+            {
+                if (_connectionDB.con.State == System.Data.ConnectionState.Open)
+                {
+                    _connectionDB.con.Close();
+                }
+            }
+
+        }
+
+
         public string GetFileLocation(int Key)
         {
             //use condition for key and set property 
@@ -96,7 +135,7 @@ namespace HarvestDataService.Service
 
         public void UpdateLogToDb(string ErrorMsg,string Even)
         {
-            string query = "EXEC dbo.SP_InsertADErrorLog @ErrorMsg,@Event";
+            string query = GetGlobalProperties("SPInsertHarvestLog");
 
 
             try
