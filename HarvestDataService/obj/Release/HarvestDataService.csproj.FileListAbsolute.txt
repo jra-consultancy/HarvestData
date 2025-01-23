@@ -120,3 +120,4 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\Newtonsoft.Json.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Encodings.Web.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.Text.Json.xml
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Release\System.ValueTuple.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Release\HarvestDataService.csproj.AssemblyReference.cache

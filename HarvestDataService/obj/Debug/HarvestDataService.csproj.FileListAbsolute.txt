@@ -215,3 +215,12 @@ D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\selenium-manager\windows
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\WebDriver.Support.dll
 D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\chromedriver.exe
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\Newtonsoft.Json.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.Text.Encodings.Web.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.Text.Json.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.ValueTuple.dll
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\Newtonsoft.Json.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.Text.Encodings.Web.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.Text.Json.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\bin\Debug\System.ValueTuple.xml
+D:\UPWORK\ANDY\HarvestData\HarvestDataService\obj\Debug\HarvestDataService.csproj.AssemblyReference.cache
