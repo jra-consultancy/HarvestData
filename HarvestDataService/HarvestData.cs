@@ -884,7 +884,7 @@ namespace HarvestDataService
                                             }
                                             groupNames.Append(dn.Substring((equalsIndex + 1),
                                                         (commaIndex - equalsIndex) - 1));
-                                            groupNames.Append("|");
+                                            groupNames.Append(";");
                                         }
 
                                         Val = groupNames.ToString();

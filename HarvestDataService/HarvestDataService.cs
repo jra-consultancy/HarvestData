@@ -59,7 +59,20 @@ namespace HarvestDataService
 
         private void InitializeComponents()
         {
+
+
             DateTime startTime = DateTime.Today.AddHours(4).AddMinutes(30);
+
+            try {
+
+                string[] Time = _iArmRepo.GetGlobalProperties("HarvesterStartTime").Split(':');
+                startTime = DateTime.Today.AddHours(Convert.ToInt32(Time[0])).AddMinutes(Convert.ToInt32(Time[1]));
+                log.PushLog("Service will start at " + startTime.ToString(), "Service started");
+            } catch 
+            {
+                log.PushLog("Error get value of global property HarvesterStartTime. service will Start at 04:30", "Service started");
+                startTime = DateTime.Today.AddHours(4).AddMinutes(30);
+            }
 
             // Calculate the time interval until the scheduled time
             TimeSpan timeUntilStart = startTime - DateTime.Now;
