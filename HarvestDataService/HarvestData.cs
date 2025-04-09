@@ -522,7 +522,7 @@ namespace HarvestDataService
                                     }
                                     else if (Qad.query == "OU")
                                     {
-                                        string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+                                        string distinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
 
                                         string[] parts = distinguishedName.Split(',');
 
@@ -868,7 +868,7 @@ namespace HarvestDataService
                                     }
                                     else if (Qad.query == "OU")
                                     {
-                                        string distinguishedName = result.Properties["distinguishedName"][0].ToString();
+                                        string distinguishedName = result.Properties["distinguishedName"].Count > 0 ? result.Properties["distinguishedName"][0].ToString() : "";
 
                                         string[] parts = distinguishedName.Split(',');
 
